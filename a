@@ -1,0 +1,22 @@
+farmrakshak/
+├── index.html          (Welcome page - farm4.html)
+├── dashboard.html      (Main app - farm3.html)
+├── scripts/
+│   ├── auth.js        (Authentication functions)
+│   └── geolocation.js (Geolocation functions)
+├── styles/
+│   └── main.css       (Additional styles)
+└── server/
+    ├── package.json
+    ├── server.js      (Node.js/Express server)
+    └── models/
+        └── User.js    (MongoDB user model)
+        cd ~/Desktop/farmrakhak1/server
+        lsof -i :5000
+        kill 12345
+         const OPENWEATHER_API_KEY = "1054194b19be2ee77212f297143cd1bd";
+        const GEMINI_API_KEY = "AIzaSyClic_G3hl5cgL8uCXq0zD8pE3tpAKw4mM";
+        const GEMINI_API_URL_TEXT_IMAGE = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=" + GEMINI_API_KEY;
+        const GEMINI_API_URL_TEXT = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" + GEMINI_API_KEY;
+
+<a href="https://ibb.co/NnZ3rp2D"><img src="https://i.ibb.co/846Bb2gv/Screenshot-2025-09-06-at-4-24-23-PM.png" alt="Screenshot-2025-09-06-at-4-24-23-PM" border="0"></a>

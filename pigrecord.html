@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Pig Records</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-green-50 to-blue-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Header -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="bg-pink-100 p-3 rounded-full">
+                        <svg class="w-8 h-8 text-pink-600" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-800">Digital Pig Records</h1>
+                        <p class="text-gray-600">Farm Management System</p>
+                    </div>
+                </div>
+                <button id="addPigBtn" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                    + Add New Pig
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">Total Pigs</p>
+                        <p id="totalPigs" class="text-2xl font-bold text-gray-800">0</p>
+                    </div>
+                    <div class="bg-blue-100 p-3 rounded-full">
+                        <span class="text-2xl">🐷</span>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">Healthy</p>
+                        <p id="healthyPigs" class="text-2xl font-bold text-green-600">0</p>
+                    </div>
+                    <div class="bg-green-100 p-3 rounded-full">
+                        <span class="text-2xl">✅</span>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">Need Attention</p>
+                        <p id="attentionPigs" class="text-2xl font-bold text-yellow-600">0</p>
+                    </div>
+                    <div class="bg-yellow-100 p-3 rounded-full">
+                        <span class="text-2xl">⚠️</span>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">Avg Weight</p>
+                        <p id="avgWeight" class="text-2xl font-bold text-purple-600">0 lbs</p>
+                    </div>
+                    <div class="bg-purple-100 p-3 rounded-full">
+                        <span class="text-2xl">⚖️</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search and Filter -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <div class="flex flex-col md:flex-row gap-4">
+                <div class="flex-1">
+                    <input type="text" id="searchInput" placeholder="Search by ID, name, or breed..." 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <select id="statusFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <option value="">All Status</option>
+                    <option value="healthy">Healthy</option>
+                    <option value="attention">Needs Attention</option>
+                    <option value="sick">Sick</option>
+                </select>
+                <select id="breedFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <option value="">All Breeds</option>
+                    <option value="yorkshire">Yorkshire</option>
+                    <option value="duroc">Duroc</option>
+                    <option value="hampshire">Hampshire</option>
+                    <option value="landrace">Landrace</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Pig Records Table -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-800">Pig Records</h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Breed</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Birth Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Weight</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Health Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Checkup</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pigTableBody" class="bg-white divide-y divide-gray-200">
+                        <!-- Pig records will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Pig Modal -->
+    <div id="pigModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-screen overflow-y-auto">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 id="modalTitle" class="text-lg font-semibold text-gray-800">Add New Pig</h3>
+            </div>
+            <form id="pigForm" class="p-6 space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Pig ID</label>
+                        <input type="text" id="pigId" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                        <input type="text" id="pigName" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Breed</label>
+                        <select id="pigBreed" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option value="">Select Breed</option>
+                            <option value="yorkshire">Yorkshire</option>
+                            <option value="duroc">Duroc</option>
+                            <option value="hampshire">Hampshire</option>
+                            <option value="landrace">Landrace</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Birth Date</label>
+                        <input type="date" id="pigBirthDate" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Weight (lbs)</label>
+                        <input type="number" id="pigWeight" step="0.1" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Health Status</label>
+                        <select id="pigHealthStatus" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option value="healthy">Healthy</option>
+                            <option value="attention">Needs Attention</option>
+                            <option value="sick">Sick</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Last Checkup</label>
+                        <input type="date" id="pigLastCheckup" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                        <select id="pigGender" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                    <textarea id="pigNotes" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Additional notes about the pig..."></textarea>
+                </div>
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" id="cancelBtn" class="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">Save Pig</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let pigs = [];
+        let editingPigId = null;
+
+        // Sample data
+        const samplePigs = [
+            {
+                id: 'PIG001',
+                name: 'Bacon',
+                breed: 'yorkshire',
+                birthDate: '2023-03-15',
+                weight: 180.5,
+                healthStatus: 'healthy',
+                lastCheckup: '2024-01-15',
+                gender: 'male',
+                notes: 'Good appetite, active'
+            },
+            {
+                id: 'PIG002',
+                name: 'Peppa',
+                breed: 'duroc',
+                birthDate: '2023-02-20',
+                weight: 165.2,
+                healthStatus: 'attention',
+                lastCheckup: '2024-01-10',
+                gender: 'female',
+                notes: 'Slight limp, monitoring'
+            },
+            {
+                id: 'PIG003',
+                name: 'Hamlet',
+                breed: 'hampshire',
+                birthDate: '2023-04-10',
+                weight: 195.8,
+                healthStatus: 'healthy',
+                lastCheckup: '2024-01-20',
+                gender: 'male',
+                notes: 'Excellent condition'
+            }
+        ];
+
+        // Initialize with sample data
+        pigs = [...samplePigs];
+
+        function updateStats() {
+            const totalPigs = pigs.length;
+            const healthyPigs = pigs.filter(pig => pig.healthStatus === 'healthy').length;
+            const attentionPigs = pigs.filter(pig => pig.healthStatus === 'attention' || pig.healthStatus === 'sick').length;
+            const avgWeight = totalPigs > 0 ? (pigs.reduce((sum, pig) => sum + (pig.weight || 0), 0) / totalPigs).toFixed(1) : 0;
+
+            document.getElementById('totalPigs').textContent = totalPigs;
+            document.getElementById('healthyPigs').textContent = healthyPigs;
+            document.getElementById('attentionPigs').textContent = attentionPigs;
+            document.getElementById('avgWeight').textContent = avgWeight + ' lbs';
+        }
+
+        function getStatusBadge(status) {
+            const badges = {
+                healthy: '<span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">Healthy</span>',
+                attention: '<span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">Needs Attention</span>',
+                sick: '<span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">Sick</span>'
+            };
+            return badges[status] || badges.healthy;
+        }
+
+        function calculateAge(birthDate) {
+            const birth = new Date(birthDate);
+            const today = new Date();
+            const ageInMonths = (today.getFullYear() - birth.getFullYear()) * 12 + (today.getMonth() - birth.getMonth());
+            return ageInMonths > 0 ? `${ageInMonths} months` : 'Less than 1 month';
+        }
+
+        function renderPigs(pigsToRender = pigs) {
+            const tbody = document.getElementById('pigTableBody');
+            
+            if (pigsToRender.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="px-6 py-8 text-center text-gray-500">
+                            <div class="flex flex-col items-center">
+                                <span class="text-4xl mb-2">🐷</span>
+                                <p>No pigs found</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = pigsToRender.map(pig => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${pig.id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${pig.name || '-'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 capitalize">${pig.breed}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${new Date(pig.birthDate).toLocaleDateString()}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${pig.weight ? pig.weight + ' lbs' : '-'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${getStatusBadge(pig.healthStatus)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${pig.lastCheckup ? new Date(pig.lastCheckup).toLocaleDateString() : '-'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button onclick="editPig('${pig.id}')" class="text-blue-600 hover:text-blue-900 mr-3">Edit</button>
+                        <button onclick="deletePig('${pig.id}')" class="text-red-600 hover:text-red-900">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function showModal(title = 'Add New Pig') {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('pigModal').classList.remove('hidden');
+            document.getElementById('pigModal').classList.add('flex');
+        }
+
+        function hideModal() {
+            document.getElementById('pigModal').classList.add('hidden');
+            document.getElementById('pigModal').classList.remove('flex');
+            document.getElementById('pigForm').reset();
+            editingPigId = null;
+        }
+
+        function addPig(pigData) {
+            pigs.push(pigData);
+            updateStats();
+            renderPigs();
+        }
+
+        function editPig(pigId) {
+            const pig = pigs.find(p => p.id === pigId);
+            if (!pig) return;
+
+            editingPigId = pigId;
+            
+            // Populate form
+            document.getElementById('pigId').value = pig.id;
+            document.getElementById('pigName').value = pig.name || '';
+            document.getElementById('pigBreed').value = pig.breed;
+            document.getElementById('pigBirthDate').value = pig.birthDate;
+            document.getElementById('pigWeight').value = pig.weight || '';
+            document.getElementById('pigHealthStatus').value = pig.healthStatus;
+            document.getElementById('pigLastCheckup').value = pig.lastCheckup || '';
+            document.getElementById('pigGender').value = pig.gender;
+            document.getElementById('pigNotes').value = pig.notes || '';
+
+            showModal('Edit Pig');
+        }
+
+        function updatePig(pigId, pigData) {
+            const index = pigs.findIndex(p => p.id === pigId);
+            if (index !== -1) {
+                pigs[index] = pigData;
+                updateStats();
+                renderPigs();
+            }
+        }
+
+        function deletePig(pigId) {
+            if (confirm('Are you sure you want to delete this pig record?')) {
+                pigs = pigs.filter(p => p.id !== pigId);
+                updateStats();
+                renderPigs();
+            }
+        }
+
+        function filterPigs() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            const breedFilter = document.getElementById('breedFilter').value;
+
+            const filtered = pigs.filter(pig => {
+                const matchesSearch = !searchTerm || 
+                    pig.id.toLowerCase().includes(searchTerm) ||
+                    (pig.name && pig.name.toLowerCase().includes(searchTerm)) ||
+                    pig.breed.toLowerCase().includes(searchTerm);
+                
+                const matchesStatus = !statusFilter || pig.healthStatus === statusFilter;
+                const matchesBreed = !breedFilter || pig.breed === breedFilter;
+
+                return matchesSearch && matchesStatus && matchesBreed;
+            });
+
+            renderPigs(filtered);
+        }
+
+        // Event listeners
+        document.getElementById('addPigBtn').addEventListener('click', () => showModal());
+        document.getElementById('cancelBtn').addEventListener('click', hideModal);
+
+        document.getElementById('pigForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const pigData = {
+                id: document.getElementById('pigId').value,
+                name: document.getElementById('pigName').value,
+                breed: document.getElementById('pigBreed').value,
+                birthDate: document.getElementById('pigBirthDate').value,
+                weight: parseFloat(document.getElementById('pigWeight').value) || null,
+                healthStatus: document.getElementById('pigHealthStatus').value,
+                lastCheckup: document.getElementById('pigLastCheckup').value,
+                gender: document.getElementById('pigGender').value,
+                notes: document.getElementById('pigNotes').value
+            };
+
+            if (editingPigId) {
+                updatePig(editingPigId, pigData);
+            } else {
+                // Check if ID already exists
+                if (pigs.some(p => p.id === pigData.id)) {
+                    alert('Pig ID already exists. Please use a different ID.');
+                    return;
+                }
+                addPig(pigData);
+            }
+
+            hideModal();
+        });
+
+        // Search and filter event listeners
+        document.getElementById('searchInput').addEventListener('input', filterPigs);
+        document.getElementById('statusFilter').addEventListener('change', filterPigs);
+        document.getElementById('breedFilter').addEventListener('change', filterPigs);
+
+        // Close modal when clicking outside
+        document.getElementById('pigModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('pigModal')) {
+                hideModal();
+            }
+        });
+
+        // Initialize the page
+        updateStats();
+        renderPigs();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97c4a0d1e0f685bf',t:'MTc1NzM5OTMzNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

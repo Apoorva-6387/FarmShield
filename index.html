@@ -1,0 +1,1709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FarmRakshak - Smart Livestock Health Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <style>
+        .hero-gradient {
+            background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
+        }
+        .feature-card {
+            transition: all 0.3s ease;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 400px;
+            border-radius: 12px;
+        }
+        .floating-animation {
+            animation: float 6s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        .fade-in {
+            animation: fadeIn 1s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .hidden {
+            display: none;
+        }
+        .risk-modal {
+            display: none;
+            position: fixed;
+            z-index: 200;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+        }
+        .risk-modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .risk-modal-content {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            margin: auto;
+            padding: 0;
+            border: none;
+            width: 95%;
+            max-width: 600px;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            animation: slideInUp 0.4s ease-out;
+        }
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .progress-bar {
+            height: 6px;
+            background: linear-gradient(90deg, #10b981, #059669);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+        .question-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin: 16px 0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        .question-card:hover {
+            border-color: #10b981;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .option-button {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 8px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            width: 100%;
+        }
+        .option-button:hover {
+            background: #e6fffa;
+            border-color: #10b981;
+            transform: translateX(4px);
+        }
+        .option-button.selected {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border-color: #10b981;
+            transform: translateX(4px);
+        }
+        .risk-score-display {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 20px;
+            padding: 32px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .risk-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0 auto 16px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        .upload-area {
+            border: 3px dashed #cbd5e0;
+            border-radius: 16px;
+            padding: 48px 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+        }
+        .upload-area:hover {
+            border-color: #10b981;
+            background: #e6fffa;
+        }
+        .upload-area.dragover {
+            border-color: #10b981;
+            background: #e6fffa;
+            transform: scale(1.02);
+        }
+        .image-preview {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 12px;
+            margin: 16px 0;
+        }
+        .loading-spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #10b981;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+          * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; scroll-behavior: smooth; }
+    body {
+      background: #000;
+      font-family: sans-serif;
+      overflow-x: hidden;
+      perspective: 2000px;
+    }
+
+    .cards-wrap {
+      width: 92%;
+      max-width: 1200px;
+      margin: 40px auto;
+      padding-bottom: 120px;
+      position: relative;
+    }
+
+    .card {
+      position: relative;
+      height: 55vh;
+      border-radius: 20px;
+      overflow: hidden;
+      background: #111;
+      display: flex;
+      gap: 12px;
+      padding: 16px;
+      margin: 0 0 -18vh;
+      transform-style: preserve-3d;
+      transition:
+        transform 0.9s cubic-bezier(.19,1,.22,1),
+        opacity 0.6s ease;
+      opacity: 0.75;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+    }
+
+    .card.active {
+      transform: translateY(-10px) scale(1.04) rotateX(0deg);
+      z-index: 50;
+      opacity: 1;
+      box-shadow: 0 40px 120px rgba(0,0,0,0.7);
+    }
+
+    .card.above {
+      transform: scale(0.96) rotateX(-8deg) translateY(-25px);
+      z-index: 30;
+      opacity: 0.85;
+    }
+
+    .card.below {
+      transform: scale(0.92) rotateX(8deg) translateY(25px);
+      z-index: 10;
+      opacity: 0.6;
+    }
+
+    .preview {
+      flex: 1;
+      border-radius: 14px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+    }
+    .preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    @media (max-width: 900px) {
+      .card { flex-direction: column; height: 58vh; margin: 0 0 -14vh; }
+    }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-green-50 to-blue-50 min-h-screen">
+    <!-- Navigation Bar -->
+    <nav class="bg-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <div class="text-2xl font-bold text-green-600">🛡️ FarmRakshak</div>
+                </div>
+                <div class="flex items-center space-x-6">
+                    <select id="languageSelector" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                        <option value="hi">हिंदी</option>
+                        <option value="en">English</option>
+                        <option value="pa">ਪੰਜਾਬੀ</option>
+                        <option value="bn">বাংলা</option>
+                    </select>
+                    <button onclick="openModal('loginModal')" class="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition-colors">
+                        <span data-lang="en">Login</span>
+                        <span data-lang="hi" style="display: none;">लॉगिन</span>
+                    </button>
+                    <button onclick="openModal('signupModal')" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors ml-2">
+                        <span data-lang="en">Sign Up</span>
+                        <span data-lang="hi" style="display: none;">साइन अप</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="hero-gradient text-white py-20">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <div class="fade-in">
+                <h1 class="text-5xl md:text-6xl font-bold mb-6">
+                    <span data-lang="en">Smart Livestock Health Management</span>
+                    <span data-lang="hi" style="display: none;">स्मार्ट पशुधन स्वास्थ्य प्रबंधन</span>
+                </h1>
+                <p class="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
+                    <span data-lang="en">AI-powered disease detection, real-time monitoring, and expert consultation for your farm</span>
+                    <span data-lang="hi" style="display: none;">आपके फार्म के लिए AI-संचालित रोग पहचान, रीयल-टाइम निगरानी, और विशेषज्ञ परामर्श</span>
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button onclick="openModal('loginModal')" class="bg-white text-green-600 px-8 py-4 rounded-lg font-bold text-lg hover:bg-gray-100 transition-colors">
+                        <span data-lang="en">Get Started Free</span>
+                        <span data-lang="hi" style="display: none;">मुफ्त में शुरू करें</span>
+                    </button>
+                    <button onclick="scrollToFeatures()" class="border-2 border-white text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-white hover:text-green-600 transition-colors">
+                        <span data-lang="en">Learn More</span>
+                        <span data-lang="hi" style="display: none;">और जानें</span>
+                    </button>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- Rest of your HTML content remains the same -->
+    <!-- Key Statistics, Features Overview, How It Works, Testimonials, Call to Action, Footer -->
+ <!-- Key Statistics -->
+    <div class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
+                <div class="fade-in">
+                    <div class="text-4xl font-bold text-green-600 mb-2">10,000+</div>
+                    <div class="text-gray-600" data-lang="en">Farmers Protected</div>
+                    <div class="text-gray-600" data-lang="hi" style="display: none;">संरक्षित किसान</div>
+                </div>
+                <div class="fade-in" style="animation-delay: 0.2s;">
+                    <div class="text-4xl font-bold text-blue-600 mb-2">95%</div>
+                    <div class="text-gray-600" data-lang="en">Disease Detection Accuracy</div>
+                    <div class="text-gray-600" data-lang="hi" style="display: none;">रोग पहचान सटीकता</div>
+                </div>
+                <div class="fade-in" style="animation-delay: 0.4s;">
+                    <div class="text-4xl font-bold text-purple-600 mb-2">24/7</div>
+                    <div class="text-gray-600" data-lang="en">Expert Support</div>
+                    <div class="text-gray-600" data-lang="hi" style="display: none;">विशेषज्ञ सहायता</div>
+                </div>
+                <div class="fade-in" style="animation-delay: 0.6s;">
+                    <div class="text-4xl font-bold text-orange-600 mb-2">50+</div>
+                    <div class="text-gray-600" data-lang="en">Diseases Covered</div>
+                    <div class="text-gray-600" data-lang="hi" style="display: none;">कवर की गई बीमारियां</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Overview -->
+    <div id="features" class="py-20 bg-gradient-to-br from-gray-50 to-blue-50">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold text-gray-800 mb-6">
+                    <span data-lang="en">Comprehensive Farm Protection</span>
+                    <span data-lang="hi" style="display: none;">व्यापक फार्म सुरक्षा</span>
+                </h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    <span data-lang="en">Everything you need to keep your livestock healthy and productive</span>
+                    <span data-lang="hi" style="display: none;">आपके पशुधन को स्वस्थ और उत्पादक रखने के लिए आवश्यक सब कुछ</span>
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- AI Disease Detection -->
+                <div class="feature-card bg-white rounded-xl p-8 shadow-lg">
+                    <div class="text-5xl mb-6">🔬</div>
+                    <h3 class="text-2xl font-bold mb-4 text-gray-800">
+                        <span data-lang="en">AI Disease Detection</span>
+                        <span data-lang="hi" style="display: none;">AI रोग पहचान</span>
+                    </h3>
+                    <p class="text-gray-600 mb-6">
+                        <span data-lang="en">Upload photos of your animals and get instant AI-powered disease diagnosis with 95% accuracy</span>
+                        <span data-lang="hi" style="display: none;">अपने जानवरों की तस्वीरें अपलोड करें और 95% सटीकता के साथ तुरंत AI-संचालित रोग निदान प्राप्त करें</span>
+                    </p>
+                    <ul class="text-sm text-gray-600 space-y-2">
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2">✓</span>
+                            <span data-lang="en">Instant photo analysis</span>
+                            <span data-lang="hi" style="display: none;">तत्काल फोटो विश्लेषण</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2">✓</span>
+                            <span data-lang="en">50+ diseases covered</span>
+                            <span data-lang="hi" style="display: none;">50+ बीमारियां कवर</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2">✓</span>
+                            <span data-lang="en">Treatment recommendations</span>
+                            <span data-lang="hi" style="display: none;">उपचार सुझाव</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Weather Risk Assessment -->
+                <div class="feature-card bg-white rounded-xl p-8 shadow-lg">
+                    <div class="text-5xl mb-6">🌡️</div>
+                    <h3 class="text-2xl font-bold mb-4 text-gray-800">
+                        <span data-lang="en">Weather Risk Assessment</span>
+                        <span data-lang="hi" style="display: none;">मौसम जोखिम मूल्यांकन</span>
+                    </h3>
+                    <p class="text-gray-600 mb-6">
+                        <span data-lang="en">Real-time weather monitoring with risk alerts and preventive measures for your farm</span>
+                        <span data-lang="hi" style="display: none;">आपके फार्म के लिए जोखिम अलर्ट और निवारक उपायों के साथ रीयल-टाइम मौसम निगरानी</span>
+                    </p>
+                    <ul class="text-sm text-gray-600 space-y-2">
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2">✓</span>
+                            <span data-lang="en">Live weather data</span>
+                            <span data-lang="hi" style="display: none;">लाइव मौसम डेटा</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2">✓</span>
+                            <span data-lang="en">Risk level indicators</span>
+                            <span data-lang="hi" style="display: none;">जोखिम स्तर संकेतक</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2">✓</span>
+                            <span data-lang="en">Preventive advisories</span>
+                            <span data-lang="hi" style="display: none;">निवारक सलाह</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Expert Consultation -->
+                <div class="feature-card bg-white rounded-xl p-8 shadow-lg">
+                    <div class="text-5xl mb-6">👨‍⚕️</div>
+                    <h3 class="text-2xl font-bold mb-4 text-gray-800">
+                        <span data-lang="en">Expert Consultation</span>
+                        <span data-lang="hi" style="display: none;">विशेषज्ञ परामर्श</span>
+                    </h3>
+                    <p class="text-gray-600 mb-6">
+                        <span data-lang="en">Connect with certified veterinarians through video calls, chat, and get personalized advice</span>
+                        <span data-lang="hi" style="display: none;">वीडियो कॉल, चैट के माध्यम से प्रमाणित पशु चिकित्सकों से जुड़ें और व्यक्तिगत सलाह प्राप्त करें</span>
+                    </p>
+                    <ul class="text-sm text-gray-600 space-y-2">
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2">✓</span>
+                            <span data-lang="en">24/7 availability</span>
+                            <span data-lang="hi" style="display: none;">24/7 उपलब्धता</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2">✓</span>
+                            <span data-lang="en">Video & chat support</span>
+                            <span data-lang="hi" style="display: none;">वीडियो और चैट सहायता</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2">✓</span>
+                            <span data-lang="en">Certified veterinarians</span>
+                            <span data-lang="hi" style="display: none;">प्रमाणित पशु चिकित्सक</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Digital Records -->
+                <div class="feature-card bg-white rounded-xl p-8 shadow-lg">
+                    <div class="text-5xl mb-6">📋</div>
+                    <h3 class="text-2xl font-bold mb-4 text-gray-800">
+                        <span data-lang="en">Digital Health Records</span>
+                        <span data-lang="hi" style="display: none;">डिजिटल स्वास्थ्य रिकॉर्ड</span>
+                    </h3>
+                    <p class="text-gray-600 mb-6">
+                        <span data-lang="en">Maintain comprehensive digital records of vaccinations, treatments, and health monitoring</span>
+                        <span data-lang="hi" style="display: none;">टीकाकरण, उपचार और स्वास्थ्य निगरानी के व्यापक डिजिटल रिकॉर्ड बनाए रखें</span>
+                    </p>
+                    <ul class="text-sm text-gray-600 space-y-2">
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2">✓</span>
+                            <span data-lang="en">Vaccination tracking</span>
+                            <span data-lang="hi" style="display: none;">टीकाकरण ट्रैकिंग</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2">✓</span>
+                            <span data-lang="en">Treatment history</span>
+                            <span data-lang="hi" style="display: none;">उपचार इतिहास</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2">✓</span>
+                            <span data-lang="en">Health analytics</span>
+                            <span data-lang="hi" style="display: none;">स्वास्थ्य विश्लेषण</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Disease Alerts -->
+                <div class="feature-card bg-white rounded-xl p-8 shadow-lg">
+                    <div class="text-5xl mb-6">📰</div>
+                    <h3 class="text-2xl font-bold mb-4 text-gray-800">
+                        <span data-lang="en">Disease Alerts & News</span>
+                        <span data-lang="hi" style="display: none;">रोग अलर्ट और समाचार</span>
+                    </h3>
+                    <p class="text-gray-600 mb-6">
+                        <span data-lang="en">Stay informed about disease outbreaks in your area with real-time alerts and updates</span>
+                        <span data-lang="hi" style="display: none;">रीयल-टाइम अलर्ट और अपडेट के साथ अपने क्षेत्र में रोग प्रकोप के बारे में सूचित रहें</span>
+                    </p>
+                    <ul class="text-sm text-gray-600 space-y-2">
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2">✓</span>
+                            <span data-lang="en">Location-based alerts</span>
+                            <span data-lang="hi" style="display: none;">स्थान-आधारित अलर्ट</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2">✓</span>
+                            <span data-lang="en">Government updates</span>
+                            <span data-lang="hi" style="display: none;">सरकारी अपडेट</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2">✓</span>
+                            <span data-lang="en">Prevention guidelines</span>
+                            <span data-lang="hi" style="display: none;">रोकथाम दिशानिर्देश</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Training & Education -->
+                <div class="feature-card bg-white rounded-xl p-8 shadow-lg">
+                    <div class="text-5xl mb-6">🎓</div>
+                    <h3 class="text-2xl font-bold mb-4 text-gray-800">
+                        <span data-lang="en">Training & Education</span>
+                        <span data-lang="hi" style="display: none;">प्रशिक्षण और शिक्षा</span>
+                    </h3>
+                    <p class="text-gray-600 mb-6">
+                        <span data-lang="en">Access expert training videos, biosecurity guidelines, and productivity tips</span>
+                        <span data-lang="hi" style="display: none;">विशेषज्ञ प्रशिक्षण वीडियो, बायोसिक्योरिटी दिशानिर्देश और उत्पादकता युक्तियों तक पहुंच</span>
+                    </p>
+                    <ul class="text-sm text-gray-600 space-y-2">
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2">✓</span>
+                            <span data-lang="en">Video tutorials</span>
+                            <span data-lang="hi" style="display: none;">वीडियो ट्यूटोरियल</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2">✓</span>
+                            <span data-lang="en">Best practices guide</span>
+                            <span data-lang="hi" style="display: none;">सर्वोत्तम प्रथाओं की गाइ드</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2">✓</span>
+                            <span data-lang="en">Certification courses</span>
+                            <span data-lang="hi" style="display: none;">प्रमाणन पाठ्यक्रम</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Risk Assessment -->
+                <div class="feature-card bg-white rounded-xl p-8 shadow-lg">
+                    <div class="text-5xl mb-6">📊</div>
+                    <h3 class="text-2xl font-bold mb-4 text-gray-800">
+                        <span data-lang="en">Smart Risk Assessment</span>
+                        <span data-lang="hi" style="display: none;">स्मार्ट जोखिम मूल्यांकन</span>
+                    </h3>
+                    <p class="text-gray-600 mb-6">
+                        <span data-lang="en">Comprehensive farm risk evaluation with AI-powered image analysis and manual assessment</span>
+                        <span data-lang="hi" style="display: none;">AI-संचालित छवि विश्लेषण और मैनुअल मूल्यांकन के साथ व्यापक फार्म जोखिम मूल्यांकन</span>
+                    </p>
+                    <ul class="text-sm text-gray-600 space-y-2">
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2">✓</span>
+                            <span data-lang="en">5-question assessment</span>
+                            <span data-lang="hi" style="display: none;">5-प्रश्न मूल्यांकन</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2">✓</span>
+                            <span data-lang="en">AI image analysis</span>
+                            <span data-lang="hi" style="display: none;">AI छवि विश्लेषण</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2">✓</span>
+                            <span data-lang="en">Risk percentage score</span>
+                            <span data-lang="hi" style="display: none;">जोखिम प्रतिशत स्कोर</span>
+                        </li>
+                    </ul>
+                    <div class="mt-6 flex gap-3">
+                        <button onclick="openRiskAssessment('manual')" class="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105">
+                            <span data-lang="en">Manual Assessment</span>
+                            <span data-lang="hi" style="display: none;">मैनुअल मूल्यांकन</span>
+                        </button>
+                        <button onclick="openRiskAssessment('ai')" class="flex-1 bg-gradient-to-r from-green-500 to-teal-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:from-green-600 hover:to-teal-700 transition-all duration-300 transform hover:scale-105">
+                            <span data-lang="en">AI Analysis</span>
+                            <span data-lang="hi" style="display: none;">AI विश्लेषण</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+
+    <!-- How It Works -->
+    <div class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold text-gray-800 mb-6">
+                    <span data-lang="en">How FarmRakshak Works</span>
+                    <span data-lang="hi" style="display: none;">फार्मरक्षक कैसे काम करता है</span>
+                </h2>
+                <p class="text-xl text-gray-600">
+                    <span data-lang="en">Simple steps to protect your livestock</span>
+                    <span data-lang="hi" style="display: none;">अपने पशुधन की सुरक्षा के लिए सरल चरण</span>
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <span class="text-3xl">📱</span>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">
+                        <span data-lang="en">1. Sign Up & Setup</span>
+                        <span data-lang="hi" style="display: none;">1. साइन अप और सेटअप</span>
+                    </h3>
+                    <p class="text-gray-600">
+                        <span data-lang="en">Create your account and add your farm details in minutes</span>
+                        <span data-lang="hi" style="display: none;">अपना खाता बनाएं और मिनटों में अपने फार्म का विवरण जोड़ें</span>
+                    </p>
+                </div>
+
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <span class="text-3xl">📸</span>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">
+                        <span data-lang="en">2. Monitor & Detect</span>
+                        <span data-lang="hi" style="display: none;">2. निगरानी और पहचान</span>
+                    </h3>
+                    <p class="text-gray-600">
+                        <span data-lang="en">Upload photos for AI analysis and get real-time health monitoring</span>
+                        <span data-lang="hi" style="display: none;">AI विश्लेषण के लिए फोटो अपलोड करें और रीयल-टाइम स्वास्थ्य निगरानी प्राप्त करें</span>
+                    </p>
+                </div>
+
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <span class="text-3xl">💊</span>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">
+                        <span data-lang="en">3. Get Treatment</span>
+                        <span data-lang="hi" style="display: none;">3. उपचार प्राप्त करें</span>
+                    </h3>
+                    <p class="text-gray-600">
+                        <span data-lang="en">Receive expert recommendations and connect with veterinarians</span>
+                        <span data-lang="hi" style="display: none;">विशेषज्ञ सिफारिशें प्राप्त करें और पशु चिकित्सकों से जुड़ें</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    class="cards-wrap" id="cardsWrap">
+    <!-- Card 1 -->
+    <article class="card active">
+      <div class="preview"><img src="https://i.ibb.co/S4HVYmNq/Screenshot-2025-09-06-at-2-20-12-PM.png" alt=""></div>
+      <div class="preview"><img src="https://i.ibb.co/C3pR9NCT/Screenshot-2025-09-07-at-11-00-07-PM.png" alt=""></div>
+    </article>
+
+    <!-- Card 2 -->
+    <article class="card">
+      <div class="preview"><img src="https://i.ibb.co/XktTWXCj/Screenshot-2025-09-07-at-10-56-29-PM.png" alt=""></div>
+      <div class="preview"><img src="https://i.ibb.co/Dgb06VG3/Screenshot-2025-09-06-at-2-20-38-PM.png" alt=""></div>
+    </article>
+
+    <!-- Card 3 -->
+    <article class="card">
+      <div class="preview"><img src="https://i.ibb.co/S4HVYmNq/Screenshot-2025-09-06-at-2-20-12-PM.png" alt=""></div>
+      <div class="preview"><img src="https://i.ibb.co/hJL6F2z9/Screenshot-2025-09-06-at-2-21-11-PM.png" alt=""></div>
+    </article>
+
+    <!-- Card 4 -->
+    <article class="card">
+      <div class="preview"><img src="https://i.ibb.co/846Bb2gv/Screenshot-2025-09-06-at-4-24-23-PM.png" alt=""></div>
+      <div class="preview"><img src="https://i.ibb.co/S4HVYmNq/Screenshot-2025-09-06-at-2-20-12-PM.png" alt=""></div>
+    </article>
+
+    <!-- Card 5 -->
+    <article class="card">
+      <div class="preview"><img src="https://i.ibb.co/S4HVYmNq/Screenshot-2025-09-06-at-2-20-12-PM.png" alt=""></div>
+      <div class="preview"><img src="https://i.ibb.co/Dgb06VG3/Screenshot-2025-09-06-at-2-20-38-PM.png" alt=""></div>
+    </article>
+
+    <!-- Card 6 -->
+    <article class="card">
+      <div class="preview"><img src="https://i.ibb.co/hJL6F2z9/Screenshot-2025-09-06-at-2-21-11-PM.png" alt=""></div>
+      <div class="preview"><img src="https://i.ibb.co/Dgb06VG3/Screenshot-2025-09-06-at-2-20-38-PM.png" alt=""></div>
+    </article>
+
+    <!-- Testimonials -->
+    <div class="py-20 bg-gradient-to-br from-green-50 to-blue-50">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold text-gray-800 mb-6">
+                    <span data-lang="en">What Farmers Say</span>
+                    <span data-lang="hi" style="display: none;">किसान क्या कहते हैं</span>
+                </h2>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white rounded-xl p-8 shadow-lg">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white font-bold mr-4">RS</div>
+                        <div>
+                            <div class="font-bold">Rajesh Singh</div>
+                            <div class="text-sm text-gray-600">Punjab</div>
+                        </div>
+                    </div>
+                    <p class="text-gray-700 mb-4">
+                        <span data-lang="en">"FarmRakshak saved my poultry farm! The AI detected disease early and I got immediate treatment advice. Highly recommended!"</span>
+                        <span data-lang="hi" style="display: none;">"फार्मरक्षक ने मेरे पोल्ट्री फार्म को बचाया! AI ने जल्दी बीमारी का पता लगाया और मुझे तुरंत उपचार की सलाह मिली। अत्यधिक अनुशंसित!"</span>
+                    </p>
+                    <div class="text-yellow-500">⭐⭐⭐⭐⭐</div>
+                </div>
+
+                <div class="bg-white rounded-xl p-8 shadow-lg">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold mr-4">PK</div>
+                        <div>
+                            <div class="font-bold">Priya Kumari</div>
+                            <div class="text-sm text-gray-600">Bihar</div>
+                        </div>
+                    </div>
+                    <p class="text-gray-700 mb-4">
+                        <span data-lang="en">"The weather alerts helped me prepare for monsoon risks. My animals stayed healthy throughout the season."</span>
+                        <span data-lang="hi" style="display: none;">"मौसम अलर्ट ने मुझे मानसून के जोखिमों के लिए तैयार होने में मदद की। मेरे जानवर पूरे मौसम में स्वस्थ रहे।"</span>
+                    </p>
+                    <div class="text-yellow-500">⭐⭐⭐⭐⭐</div>
+                </div>
+
+                <div class="bg-white rounded-xl p-8 shadow-lg">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold mr-4">AS</div>
+                        <div>
+                            <div class="font-bold">Amit Sharma</div>
+                            <div class="text-sm text-gray-600">Haryana</div>
+                        </div>
+                    </div>
+                    <p class="text-gray-700 mb-4">
+                        <span data-lang="en">"Digital records feature is amazing! I can track all vaccinations and treatments easily. Very user-friendly."</span>
+                        <span data-lang="hi" style="display: none;">"डिजिटल रिकॉर्ड फीचर अद्भुत है! मैं सभी टीकाकरण और उपचार को आसानी से ट्रैक कर सकता हूं। बहुत उपयोगकर्ता-अनुकूल।"</span>
+                    </p>
+                    <div class="text-yellow-500">⭐⭐⭐⭐⭐</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Call to Action -->
+    <div class="hero-gradient text-white py-20">
+        <div class="max-w-4xl mx-auto px-4 text-center">
+            <h2 class="text-4xl md:text-5xl font-bold mb-6">
+                <span data-lang="en">Ready to Protect Your Farm?</span>
+                <span data-lang="hi" style="display: none;">अपने फार्म की सुरक्षा के लिए तैयार हैं?</span>
+            </h2>
+            <p class="text-xl mb-8">
+                <span data-lang="en">Join thousands of farmers who trust FarmRakshak for their livestock health management</span>
+                <span data-lang="hi" style="display: none;">हजारों किसानों में शामिल हों जो अपने पशुधन स्वास्थ्य प्रबंधन के लिए फार्मरक्षक पर भरोसा करते हैं</span>
+            </p>
+            <button onclick="openModal('loginModal')" class="bg-white text-green-600 px-8 py-4 rounded-lg font-bold text-lg hover:bg-gray-100 transition-colors">
+                <span data-lang="en">Start Free Trial</span>
+                <span data-lang="hi" style="display: none;">मुफ्त परीक्षण शुरू करें</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <div class="text-2xl font-bold mb-4">🛡️ FarmRakshak</div>
+                    <p class="text-gray-400">
+                        <span data-lang="en">Smart livestock health management for modern farmers</span>
+                        <span data-lang="hi" style="display: none;">आधुनिक किसानों के लिए स्मार्ट पशुधन स्वास्थ्य प्रबंधन</span>
+                    </p>
+                </div>
+                <div>
+                    <h3 class="font-bold mb-4">
+                        <span data-lang="en">Features</span>
+                        <span data-lang="hi" style="display: none;">विशेषताएं</span>
+                    </h3>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><span data-lang="en">Disease Detection</span><span data-lang="hi" style="display: none;">रोग पहचान</span></li>
+                        <li><span data-lang="en">Weather Monitoring</span><span data-lang="hi" style="display: none;">मौसम निगरानी</span></li>
+                        <li><span data-lang="en">Expert Consultation</span><span data-lang="hi" style="display: none;">विशेषज्ञ परामर्श</span></li>
+                        <li><span data-lang="en">Digital Records</span><span data-lang="hi" style="display: none;">डिजिटल रिकॉर्ड</span></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-bold mb-4">
+                        <span data-lang="en">Support</span>
+                        <span data-lang="hi" style="display: none;">सहायता</span>
+                    </h3>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><span data-lang="en">Help Center</span><span data-lang="hi" style="display: none;">सहायता केंद्र</span></li>
+                        <li><span data-lang="en">Training Videos</span><span data-lang="hi" style="display: none;">प्रशिक्षण वीडियो</span></li>
+                        <li><span data-lang="en">Contact Us</span><span data-lang="hi" style="display: none;">संपर्क करें</span></li>
+                        <li><span data-lang="en">FAQ</span><span data-lang="hi" style="display: none;">सामान्य प्रश्न</span></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-bold mb-4">
+                        <span data-lang="en">Contact</span>
+                        <span data-lang="hi" style="display: none;">संपर्क</span>
+                    </h3>
+                    <ul class="space-y-2 text-gray-400">
+                        <li>📞 +91 98765 43210</li>
+                        <li>📧 support@farmrakshak.com</li>
+                        <li>📍 New Delhi, India</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+                <p>&copy; 2024 FarmRakshak. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">
+                    <span data-lang="en">Login to FarmRakshak</span>
+                    <span data-lang="hi" style="display: none;">फार्मरक्षक में लॉगिन करें</span>
+                </h2>
+                <span onclick="closeModal('loginModal')" class="text-gray-500 hover:text-gray-700 text-2xl cursor-pointer">&times;</span>
+            </div>
+            
+            <!-- Login Tabs -->
+            <div class="flex justify-around mb-6 border-b">
+                <button id="farmerLoginTab" onclick="switchLoginTab('farmer')" class="py-2 px-4 text-center text-green-600 font-semibold border-b-2 border-green-500 focus:outline-none">
+                    <span data-lang="en">Farmer Login</span>
+                    <span data-lang="hi" style="display: none;">किसान लॉगिन</span>
+                </button>
+                <button id="governmentLoginTab" onclick="switchLoginTab('government')" class="py-2 px-4 text-center text-gray-600 font-semibold border-b-2 border-transparent hover:border-green-500 focus:outline-none">
+                    <span data-lang="en">Government Login</span>
+                    <span data-lang="hi" style="display: none;">सरकारी लॉगिन</span>
+                </button>
+            </div>
+            
+            <!-- Farmer Login Form -->
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label class="block text-gray-700 mb-2">
+                        <span data-lang="en">Mobile Number</span>
+                        <span data-lang="hi" style="display: none;">मोबाइल नंबर</span>
+                    </label>
+                    <input type="tel" id="mobile" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="+91 12345 67890" required>
+                </div>
+                
+                
+                <div id="loginError" class="text-red-500 text-sm hidden"></div>
+                
+                <!-- reCAPTCHA container for Firebase -->
+                <div id="loginRecaptcha"></div>
+                
+                <button type="submit" class="w-full bg-green-600 text-white py-3 rounded-md hover:bg-green-700 transition-colors">
+                    <span data-lang="en">Login</span>
+                    <span data-lang="hi" style="display: none;">लॉगिन करें</span>
+                </button>
+            </form>
+            
+            <!-- Government Login Form -->
+            <form id="governmentLoginForm" class="space-y-4 hidden">
+                <div>
+                    <label class="block text-gray-700 mb-2">
+                        <span data-lang="en">Username</span>
+                        <span data-lang="hi" style="display: none;">उपयोगकर्ता नाम</span>
+                    </label>
+                    <input type="text" id="govUsername" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="Enter username" required>
+                </div>
+                
+                <div>
+                    <label class="block text-gray-700 mb-2">
+                        <span data-lang="en">Password</span>
+                        <span data-lang="hi" style="display: none;">पासवर्ड</span>
+                    </label>
+                    <input type="password" id="govPassword" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="Enter password" required>
+                </div>
+                
+                <div id="govLoginError" class="text-red-500 text-sm hidden"></div>
+                
+                <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 transition-colors">
+                    <span data-lang="en">Government Login</span>
+                    <span data-lang="hi" style="display: none;">सरकारी लॉगिन</span>
+                </button>
+            </form>
+            
+            <div class="mt-4 text-center text-sm text-gray-600">
+                <span data-lang="en">By logging in, you agree to our </span>
+                <span data-lang="hi" style="display: none;">लॉगिन करके, आप हमारी </span>
+                <a href="#" class="text-green-600 hover:underline">
+                    <span data-lang="en">Terms of Service</span>
+                    <span data-lang="hi" style="display: none;">सेवा की शर्तें</span>
+                </a>
+                <span data-lang="en"> and </span>
+                <span data-lang="hi" style="display: none;"> और </span>
+                <a href="#" class="text-green-600 hover:underline">
+                    <span data-lang="en">Privacy Policy</span>
+                    <span data-lang="hi" style="display: none;">गोपनीयता नीति</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Signup Modal -->
+    <div id="signupModal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">
+                    <span data-lang="en">Sign Up for FarmRakshak</span>
+                    <span data-lang="hi" style="display: none;">फार्मरक्षक के लिए साइन अप करें</span>
+                </h2>
+                <span onclick="closeModal('signupModal')" class="text-gray-500 hover:text-gray-700 text-2xl cursor-pointer">&times;</span>
+            </div>
+            
+            <form id="signupForm" class="space-y-4">
+                <div>
+                    <label class="block text-gray-700 mb-2">
+                        <span data-lang="en">Mobile Number</span>
+                        <span data-lang="hi" style="display: none;">मोबाइल नंबर</span>
+                    </label>
+                    <input type="tel" id="signupMobile" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="+91 12345 67890" required>
+                </div>
+                
+                <div>
+                    <label class="block text-gray-700 mb-2">
+                        <span data-lang="en">Farm Type</span>
+                        <span data-lang="hi" style="display: none;">फार्म प्रकार</span>
+                    </label>
+                    <select id="farmType" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                        <option value="">Select Farm Type</option>
+                        <option value="hen">Hen/Poultry</option>
+                        <option value="pig">Pig</option>
+                        <option value="cow">Cow</option>
+                        <option value="goat">Goat</option>
+                        <option value="mixed">Mixed Farm</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-gray-700 mb-2">
+                        <span data-lang="en">Farm Size</span>
+                        <span data-lang="hi" style="display: none;">फार्म का आकार</span>
+                    </label>
+                    <select id="farmSize" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                        <option value="">Select Farm Size</option>
+                        <option value="small">Small (1-50 animals)</option>
+                        <option value="medium">Medium (51-200 animals)</option>
+                        <option value="big">Big (200+ animals)</option>
+                    </select>
+                </div>
+                
+                
+                <div id="signupError" class="text-red-500 text-sm hidden"></div>
+                
+                <!-- reCAPTCHA container for Firebase -->
+                <div id="signupRecaptcha"></div>
+                
+                <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 transition-colors">
+                    <span data-lang="en">Sign Up</span>
+                    <span data-lang="hi" style="display: none;">साइन अप करें</span>
+                </button>
+            </form>
+            
+            <div class="mt-4 text-center text-sm text-gray-600">
+                <span data-lang="en">Already have an account? </span>
+                <span data-lang="hi" style="display: none;">पहले से खाता है? </span>
+                <button onclick="closeModal('signupModal'); openModal('loginModal')" class="text-green-600 hover:underline">
+                    <span data-lang="en">Login</span>
+                    <span data-lang="hi" style="display: none;">लॉगिन</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Risk Assessment Modal -->
+    <div id="riskAssessmentModal" class="risk-modal">
+        <div class="risk-modal-content">
+            <div class="p-6">
+                <!-- Header -->
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">
+                        <span data-lang="en">Farm Risk Assessment</span>
+                        <span data-lang="hi" style="display: none;">फार्म जोखिम मूल्यांकन</span>
+                    </h2>
+                    <span onclick="closeRiskAssessment()" class="text-gray-500 hover:text-gray-700 text-2xl cursor-pointer">&times;</span>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="mb-6">
+                    <div class="flex justify-between text-sm text-gray-600 mb-2">
+                        <span data-lang="en">Progress</span>
+                        <span data-lang="hi" style="display: none;">प्रगति</span>
+                        <span id="progressText">0/5</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div id="progressBar" class="progress-bar h-2 rounded-full" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Manual Assessment Content -->
+                <div id="manualAssessmentContent">
+                    <div id="questionContainer">
+                        <!-- Questions will be dynamically loaded here -->
+                    </div>
+                    
+                    <div class="flex justify-between mt-8">
+                        <button id="prevBtn" onclick="previousQuestion()" class="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors hidden">
+                            <span data-lang="en">Previous</span>
+                            <span data-lang="hi" style="display: none;">पिछला</span>
+                        </button>
+                        <button id="nextBtn" onclick="nextQuestion()" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors ml-auto">
+                            <span data-lang="en">Next</span>
+                            <span data-lang="hi" style="display: none;">अगला</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- AI Assessment Content -->
+                <div id="aiAssessmentContent" class="hidden">
+                    <div class="text-center">
+                        <div class="text-6xl mb-4">🤖</div>
+                        <h3 class="text-xl font-semibold mb-4">
+                            <span data-lang="en">AI-Powered Farm Analysis</span>
+                            <span data-lang="hi" style="display: none;">AI-संचालित फार्म विश्लेषण</span>
+                        </h3>
+                        <p class="text-gray-600 mb-6">
+                            <span data-lang="en">Upload a photo of your farm and get instant risk assessment</span>
+                            <span data-lang="hi" style="display: none;">अपने फार्म की तस्वीर अपलोड करें और तुरंत जोखिम मूल्यांकन प्राप्त करें</span>
+                        </p>
+                        
+                        <div id="uploadArea" class="upload-area" onclick="document.getElementById('imageInput').click()">
+                            <div class="text-4xl mb-4">📸</div>
+                            <p class="text-lg font-medium mb-2">
+                                <span data-lang="en">Click to upload farm image</span>
+                                <span data-lang="hi" style="display: none;">फार्म की तस्वीर अपलोड करने के लिए क्लिक करें</span>
+                            </p>
+                            <p class="text-sm text-gray-500">
+                                <span data-lang="en">or drag and drop</span>
+                                <span data-lang="hi" style="display: none;">या खींचें और छोड़ें</span>
+                            </p>
+                        </div>
+                        
+                        <input type="file" id="imageInput" accept="image/*" style="display: none;" onchange="handleImageUpload(event)">
+                        
+                        <div id="imagePreview" class="hidden">
+                            <img id="previewImg" class="image-preview" alt="Farm Preview">
+                            <button onclick="analyzeImage()" class="mt-4 px-8 py-3 bg-gradient-to-r from-green-500 to-teal-600 text-white rounded-lg font-semibold hover:from-green-600 hover:to-teal-700 transition-all duration-300 transform hover:scale-105">
+                                <span data-lang="en">Analyze with AI</span>
+                                <span data-lang="hi" style="display: none;">AI के साथ विश्लेषण करें</span>
+                            </button>
+                        </div>
+                        
+                        <div id="aiLoading" class="hidden">
+                            <div class="loading-spinner mb-4"></div>
+                            <p class="text-lg font-medium">
+                                <span data-lang="en">AI is analyzing your farm...</span>
+                                <span data-lang="hi" style="display: none;">AI आपके फार्म का विश्लेषण कर रहा है...</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results Display -->
+                <div id="resultsDisplay" class="hidden">
+                    <div class="risk-score-display">
+                        <div class="risk-circle" id="riskCircle">
+                            <span id="riskPercentage">0%</span>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-2" id="riskLevel">
+                            <span data-lang="en">Low Risk</span>
+                            <span data-lang="hi" style="display: none;">कम जोखिम</span>
+                        </h3>
+                        <p class="text-lg opacity-90" id="riskDescription">
+                            <span data-lang="en">Your farm shows good health indicators</span>
+                            <span data-lang="hi" style="display: none;">आपका फार्म अच्छे स्वास्थ्य संकेतक दिखाता है</span>
+                        </p>
+                    </div>
+                    
+                    <div class="mt-6">
+                        <h4 class="text-lg font-semibold mb-4">
+                            <span data-lang="en">Recommendations</span>
+                            <span data-lang="hi" style="display: none;">सिफारिशें</span>
+                        </h4>
+                        <div id="recommendations" class="space-y-3">
+                            <!-- Recommendations will be loaded here -->
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-center mt-8">
+                        <button onclick="saveRiskAssessment()" class="px-8 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors mr-4">
+                            <span data-lang="en">Save Assessment</span>
+                            <span data-lang="hi" style="display: none;">मूल्यांकन सहेजें</span>
+                        </button>
+                        <button onclick="closeRiskAssessment()" class="px-8 py-3 bg-gray-500 text-white rounded-lg font-semibold hover:bg-gray-600 transition-colors">
+                            <span data-lang="en">Close</span>
+                            <span data-lang="hi" style="display: none;">बंद करें</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDwtvb0us8Jabbv2jhgwI44VtOSKaE2uSs",
+            authDomain: "bio-security-94a4d.firebaseapp.com",
+            databaseURL: "https://bio-security-94a4d-default-rtdb.firebaseio.com",
+            projectId: "bio-security-94a4d",
+            storageBucket: "bio-security-94a4d.firebasestorage.app",
+            messagingSenderId: "38426842781",
+            appId: "1:38426842781:web:dc318acde77c0af51b2674",
+            measurementId: "G-7TEDETV8B8"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const auth = firebase.auth();
+
+        // Global variables for OTP verification
+        let confirmationResult = null;
+        let isSignup = false;
+        let testMode = true; // Set to false for production
+
+        // Global variables
+        let currentLanguage = 'hi';
+        let otpSent = false;
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set default language to Hindi
+            changeLanguage('hi');
+            
+            // Add event listener to language selector
+            document.getElementById('languageSelector').addEventListener('change', function() {
+                changeLanguage(this.value);
+            });
+            
+            // Request location permission
+            requestLocation();
+        });
+
+        // Modal functions
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+            document.body.style.overflow = 'auto';
+            
+            // Reset forms if closing modals
+            if (id === 'loginModal') {
+                resetLoginForm();
+            } else if (id === 'signupModal') {
+                resetSignupForm();
+            }
+        }
+
+        // Close modal when clicking outside
+        document.addEventListener('click', function(event) {
+            if (event.target.classList.contains('modal')) {
+                closeModal(event.target.id);
+            }
+        });
+
+        // Language switching
+        function changeLanguage(lang) {
+            currentLanguage = lang;
+            
+            // Update all language-specific elements
+            document.querySelectorAll('[data-lang]').forEach(element => {
+                if (element.getAttribute('data-lang') === lang) {
+                    element.style.display = '';
+                } else {
+                    element.style.display = 'none';
+                }
+            });
+            
+            // Update language selector value
+            document.getElementById('languageSelector').value = lang;
+        }
+
+        // Scroll to features
+        function scrollToFeatures() {
+            document.getElementById('features').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Switch login tabs
+        function switchLoginTab(tab) {
+            const farmerForm = document.getElementById('loginForm');
+            const governmentForm = document.getElementById('governmentLoginForm');
+            const farmerTab = document.getElementById('farmerLoginTab');
+            const governmentTab = document.getElementById('governmentLoginTab');
+            
+            if (tab === 'farmer') {
+                farmerForm.classList.remove('hidden');
+                governmentForm.classList.add('hidden');
+                farmerTab.classList.add('text-green-600', 'border-green-500');
+                farmerTab.classList.remove('text-gray-600', 'border-transparent');
+                governmentTab.classList.add('text-gray-600', 'border-transparent');
+                governmentTab.classList.remove('text-green-600', 'border-green-500');
+            } else if (tab === 'government') {
+                farmerForm.classList.add('hidden');
+                governmentForm.classList.remove('hidden');
+                governmentTab.classList.add('text-green-600', 'border-green-500');
+                governmentTab.classList.remove('text-gray-600', 'border-transparent');
+                farmerTab.classList.add('text-gray-600', 'border-transparent');
+                farmerTab.classList.remove('text-green-600', 'border-green-500');
+            }
+        }
+
+        // Reset login form
+        function resetLoginForm() {
+            document.getElementById('loginError').classList.add('hidden');
+            document.getElementById('govLoginError').classList.add('hidden');
+            document.getElementById('mobile').value = '';
+            document.getElementById('govUsername').value = '';
+            document.getElementById('govPassword').value = '';
+            
+            // Reset to farmer login tab
+            switchLoginTab('farmer');
+            
+            // Update button text based on current language
+            const loginBtn = document.querySelector('#loginForm button[type="submit"]');
+            if (currentLanguage === 'hi') {
+                loginBtn.innerHTML = 'लॉगिन करें';
+            } else {
+                loginBtn.innerHTML = 'Login';
+            }
+            
+            otpSent = false;
+        }
+
+        // Reset signup form
+        function resetSignupForm() {
+            document.getElementById('signupError').classList.add('hidden');
+            document.getElementById('signupMobile').value = '';
+            document.getElementById('farmType').value = '';
+            document.getElementById('farmSize').value = '';
+            
+            // Update button text based on current language
+            const signupBtn = document.querySelector('#signupForm button[type="submit"]');
+            if (currentLanguage === 'hi') {
+                signupBtn.innerHTML = 'साइन अप करें';
+            } else {
+                signupBtn.innerHTML = 'Sign Up';
+            }
+            
+            otpSent = false;
+        }
+
+        // Login form handling
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const mobile = document.getElementById('mobile').value.trim();
+            const loginBtn = document.querySelector('#loginForm button[type="submit"]');
+            const errorDiv = document.getElementById('loginError');
+            
+            // Validate mobile number
+            if (!mobile || mobile.length < 10) {
+                errorDiv.textContent = currentLanguage === 'hi' ? 
+                    'कृपया वैध मोबाइल नंबर दर्ज करें' : 
+                    'Please enter a valid mobile number';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+            
+            // Show loading state
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = currentLanguage === 'hi' ? 'लॉगिन हो रहा है...' : 'Logging in...';
+            errorDiv.classList.add('hidden');
+            
+            try {
+                // Format phone number for Firebase (Indian format)
+                let phoneNumber = mobile.replace(/[^0-9]/g, ''); // Remove all non-digits
+                
+                // Ensure it's a 10-digit Indian number
+                if (phoneNumber.length === 10) {
+                    phoneNumber = '+91' + phoneNumber;
+                } else if (phoneNumber.length === 12 && phoneNumber.startsWith('91')) {
+                    phoneNumber = '+' + phoneNumber;
+                } else if (phoneNumber.length === 13 && phoneNumber.startsWith('+91')) {
+                    // Already formatted correctly
+                } else {
+                    throw new Error('Invalid phone number format');
+                }
+                
+                console.log('Logging in with:', phoneNumber);
+                
+                // Simulate OTP verification with fixed OTP 123456
+                console.log('Auto-verifying with OTP: 123456');
+                
+                // Show success message
+                errorDiv.textContent = currentLanguage === 'hi' ? 
+                    'लॉगिन सफल! पुनर्निर्देशित...' : 
+                    'Login successful! Redirecting...';
+                errorDiv.classList.remove('hidden');
+                errorDiv.classList.remove('text-red-500');
+                errorDiv.classList.add('text-green-600');
+                
+                // Update user login time in Firebase
+                try {
+                    const mobileKey = mobile.replace(/[^0-9]/g, '');
+                    await database.ref('users/' + mobileKey + '/lastLogin').set(firebase.database.ServerValue.TIMESTAMP);
+                    
+                    // Get user data from Firebase
+                    const userSnapshot = await database.ref('users/' + mobileKey).once('value');
+                    const userData = userSnapshot.val();
+                    
+                    if (userData) {
+                        // Store user data in localStorage for session management
+                        localStorage.setItem('userData', JSON.stringify(userData));
+                        localStorage.setItem('isLoggedIn', 'true');
+                    }
+                    
+                    // Success - redirect to dashboard after a short delay
+                    // Success - redirect based on farm type
+setTimeout(() => {
+    if (farmType === "hen") {
+        window.location.href = "dashboard.html"; // poultry dashboard
+    } else if (farmType === "pig") {
+        window.location.href = "pigdashboard.html"; // pig dashboard
+    } else {
+        window.location.href = "dashboard.html"; // default fallback
+    }
+}, 1500);
+
+                } catch (error) {
+                    console.error('Error updating login time:', error);
+                    // Still redirect even if Firebase update fails
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 1500);
+                }
+                
+            } catch (error) {
+                console.error('Error during login:', error);
+                
+                let errorMessage = 'Login failed. Please try again.';
+                if (currentLanguage === 'hi') {
+                    errorMessage = 'लॉगिन विफल। कृपया पुनः प्रयास करें।';
+                }
+                
+                errorDiv.textContent = errorMessage;
+                errorDiv.classList.remove('hidden');
+                errorDiv.classList.remove('text-green-600');
+                errorDiv.classList.add('text-red-500');
+                
+                // Reset button
+                loginBtn.disabled = false;
+                if (currentLanguage === 'hi') {
+                    loginBtn.innerHTML = 'लॉगिन करें';
+                } else {
+                    loginBtn.innerHTML = 'Login';
+                }
+            }
+        });
+
+        // Government login form handling
+        document.getElementById('governmentLoginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('govUsername').value.trim();
+            const password = document.getElementById('govPassword').value.trim();
+            const govLoginBtn = document.querySelector('#governmentLoginForm button[type="submit"]');
+            const errorDiv = document.getElementById('govLoginError');
+            
+            // Validate credentials
+            if (!username || !password) {
+                errorDiv.textContent = currentLanguage === 'hi' ? 
+                    'कृपया उपयोगकर्ता नाम और पासवर्ड दर्ज करें' : 
+                    'Please enter username and password';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+            
+            // Show loading state
+            govLoginBtn.disabled = true;
+            govLoginBtn.innerHTML = currentLanguage === 'hi' ? 'लॉगिन हो रहा है...' : 'Logging in...';
+            errorDiv.classList.add('hidden');
+            
+            try {
+                // Check government credentials
+                if (username === 'government' && password === 'psit') {
+                    // Show success message
+                    errorDiv.textContent = currentLanguage === 'hi' ? 
+                        'सरकारी लॉगिन सफल! पुनर्निर्देशित...' : 
+                        'Government login successful! Redirecting...';
+                    errorDiv.classList.remove('hidden');
+                    errorDiv.classList.remove('text-red-500');
+                    errorDiv.classList.add('text-green-600');
+                    
+                    // Store government login status
+                    localStorage.setItem('isGovernmentLoggedIn', 'true');
+                    localStorage.setItem('userType', 'government');
+                    localStorage.setItem('isLoggedIn', 'true');
+                    
+                    // Redirect to the dedicated government portal
+                    setTimeout(() => {
+                        window.location.href = 'government.html';
+                    }, 1500);
+                    
+                } else {
+                    // Invalid credentials
+                    errorDiv.textContent = currentLanguage === 'hi' ? 
+                        'गलत उपयोगकर्ता नाम या पासवर्ड' : 
+                        'Invalid username or password';
+                    errorDiv.classList.remove('hidden');
+                    errorDiv.classList.remove('text-green-600');
+                    errorDiv.classList.add('text-red-500');
+                }
+                
+            } catch (error) {
+                console.error('Error during government login:', error);
+                errorDiv.textContent = currentLanguage === 'hi' ? 
+                    'लॉगिन में त्रुटि। कृपया पुनः प्रयास करें।' : 
+                    'Login error. Please try again.';
+                errorDiv.classList.remove('hidden');
+                errorDiv.classList.remove('text-green-600');
+                errorDiv.classList.add('text-red-500');
+            } finally {
+                // Reset button
+                govLoginBtn.disabled = false;
+                if (currentLanguage === 'hi') {
+                    govLoginBtn.innerHTML = 'सरकारी लॉगिन';
+                } else {
+                    govLoginBtn.innerHTML = 'Government Login';
+                }
+            }
+        });
+
+        // Signup form handling
+        document.getElementById('signupForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const mobile = document.getElementById('signupMobile').value.trim();
+            const farmType = document.getElementById('farmType').value;
+            const farmSize = document.getElementById('farmSize').value;
+            const signupBtn = document.querySelector('#signupForm button[type="submit"]');
+            const errorDiv = document.getElementById('signupError');
+            
+            // Validate form fields
+            if (!mobile || mobile.length < 10) {
+                errorDiv.textContent = currentLanguage === 'hi' ? 
+                    'कृपया वैध मोबाइल नंबर दर्ज करें' : 
+                    'Please enter a valid mobile number';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+            
+            if (!farmType) {
+                errorDiv.textContent = currentLanguage === 'hi' ? 
+                    'कृपया फार्म प्रकार चुनें' : 
+                    'Please select farm type';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+            
+            if (!farmSize) {
+                errorDiv.textContent = currentLanguage === 'hi' ? 
+                    'कृपया फार्म का आकार चुनें' : 
+                    'Please select farm size';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+            
+            // Show loading state
+            signupBtn.disabled = true;
+            signupBtn.innerHTML = currentLanguage === 'hi' ? 'साइन अप हो रहा है...' : 'Signing up...';
+            errorDiv.classList.add('hidden');
+            
+            try {
+                // Format phone number for Firebase (Indian format)
+                let phoneNumber = mobile.replace(/[^0-9]/g, ''); // Remove all non-digits
+                
+                // Ensure it's a 10-digit Indian number
+                if (phoneNumber.length === 10) {
+                    phoneNumber = '+91' + phoneNumber;
+                } else if (phoneNumber.length === 12 && phoneNumber.startsWith('91')) {
+                    phoneNumber = '+' + phoneNumber;
+                } else if (phoneNumber.length === 13 && phoneNumber.startsWith('+91')) {
+                    // Already formatted correctly
+                } else {
+                    throw new Error('Invalid phone number format');
+                }
+                
+                console.log('Signing up with:', phoneNumber);
+                
+                // Simulate OTP verification with fixed OTP 123456
+                console.log('Auto-verifying with OTP: 123456');
+                
+                // Show success message
+                errorDiv.textContent = currentLanguage === 'hi' ? 
+                    'साइन अप सफल! पुनर्निर्देशित...' : 
+                    'Signup successful! Redirecting...';
+                errorDiv.classList.remove('hidden');
+                errorDiv.classList.remove('text-red-500');
+                errorDiv.classList.add('text-green-600');
+                
+                // Save user data to Firebase
+                try {
+                    const userData = {
+                        mobile: mobile,
+                        farmType: farmType,
+                        farmSize: farmSize,
+                        uid: 'user-' + Date.now(),
+                        createdAt: firebase.database.ServerValue.TIMESTAMP,
+                        lastLogin: firebase.database.ServerValue.TIMESTAMP
+                    };
+                    
+                    // Save to Firebase Realtime Database
+                    await database.ref('users/' + mobile.replace(/[^0-9]/g, '')).set(userData);
+                    
+                    // Store user data in localStorage for session management
+                    localStorage.setItem('userData', JSON.stringify(userData));
+                    localStorage.setItem('isLoggedIn', 'true');
+                    
+                    // Success - redirect to dashboard after a short delay
+                    // Success - redirect based on farm type
+setTimeout(() => {
+    if (farmType === "hen") {
+        window.location.href = "dashboard.html"; // poultry dashboard
+    } else if (farmType === "pig") {
+        window.location.href = "pigdashboard.html"; // pig dashboard
+    } else {
+        window.location.href = "dashboard.html"; // default fallback
+    }
+}, 1500);
+
+                } catch (error) {
+                    console.error('Error saving user data:', error);
+                    errorDiv.textContent = currentLanguage === 'hi' ? 
+                        'डेटा सेव करने में त्रुटि। कृपया पुनः प्रयास करें।' : 
+                        'Error saving data. Please try again.';
+                    errorDiv.classList.remove('hidden');
+                    errorDiv.classList.remove('text-green-600');
+                    errorDiv.classList.add('text-red-500');
+                }
+                
+            } catch (error) {
+                console.error('Error during signup:', error);
+                
+                let errorMessage = 'Signup failed. Please try again.';
+                if (currentLanguage === 'hi') {
+                    errorMessage = 'साइन अप विफल। कृपया पुनः प्रयास करें।';
+                }
+                
+                errorDiv.textContent = errorMessage;
+                errorDiv.classList.remove('hidden');
+                errorDiv.classList.remove('text-green-600');
+                errorDiv.classList.add('text-red-500');
+                
+                // Reset button
+                signupBtn.disabled = false;
+                if (currentLanguage === 'hi') {
+                    signupBtn.innerHTML = 'साइन अप करें';
+                } else {
+                    signupBtn.innerHTML = 'Sign Up';
+                }
+            }
+        });
+
+        // Request location permission
+        function requestLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    // Success callback
+                    function(position) {
+                        console.log('Location access granted');
+                        const latitude = position.coords.latitude;
+                        const longitude = position.coords.longitude;
+                        
+                        // Store location in localStorage
+                        localStorage.setItem('userLocation', JSON.stringify({
+                            latitude: latitude,
+                            longitude: longitude,
+                            timestamp: new Date().toISOString()
+                        }));
+                        
+                        // Send to server (in a real application)
+                        sendLocationToServer(latitude, longitude);
+                    },
+                    // Error callback
+                    function(error) {
+                        console.log('Location access denied or error:', error);
+                        // Fallback to IP-based location
+                        getLocationByIP();
+                    },
+                    // Options
+                    { 
+                        enableHighAccuracy: true, 
+                        timeout: 10000, 
+                        maximumAge: 300000 
+                    }
+                );
+            } else {
+                console.log('Geolocation is not supported by this browser.');
+                // Fallback to IP-based location
+                getLocationByIP();
+            }
+        }
+
+        // Fallback to IP-based location
+        function getLocationByIP() {
+            // In a real app, you would call your IP geolocation API here
+            console.log('Getting location by IP');
+            
+            // Simulate IP-based location
+            const locationData = {
+                latitude: 28.6139, // Example: New Delhi
+                longitude: 77.2090,
+                source: 'ip',
+                timestamp: new Date().toISOString()
+            };
+            
+            // Store in localStorage
+            localStorage.setItem('userLocation', JSON.stringify(locationData));
+            
+            // Send to server
+            sendLocationToServer(locationData.latitude, locationData.longitude);
+        }
+
+        // Send location to server
+        function sendLocationToServer(lat, lng) {
+            // In a real app, you would send this to your backend
+            console.log('Sending location to server:', lat, lng);
+            
+            // Example fetch request (commented out for demo)
+            /*
+            fetch('http://localhost:5000/api/location', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    latitude: lat,
+                    longitude: lng,
+                    timestamp: new Date().toISOString()
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Location stored successfully:', data);
+            })
+            .catch(error => {
+                console.error('Error storing location:', error);
+            });
+            */
+        }
+    </script>
+    <script>
+    const cards = document.querySelectorAll('.card');
+    let activeIndex = 0;
+
+    function setActive(index, smooth = false){
+      activeIndex = Math.max(0, Math.min(cards.length-1, index));
+      cards.forEach((c,i)=>{
+        c.classList.remove('active','above','below');
+        if(i === activeIndex){
+          c.classList.add('active');
+        } else if(i < activeIndex){
+          c.classList.add('above');
+        } else {
+          c.classList.add('below');
+        }
+      });
+      if (smooth) {
+        cards[activeIndex].scrollIntoView({behavior:"smooth", block:"center"});
+      }
+    }
+
+    // Use IntersectionObserver instead of scroll snapping
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if(entry.isIntersecting){
+          const idx = [...cards].indexOf(entry.target);
+          setActive(idx, false);
+        }
+      });
+    }, {
+      root: null,
+      threshold: 0.5
+    });
+
+    cards.forEach(c => observer.observe(c));
+
+    // Keyboard navigation (Up/Down)
+    document.addEventListener('keydown', e=>{
+      if(e.key==="ArrowDown") setActive(activeIndex+1, true);
+      if(e.key==="ArrowUp") setActive(activeIndex-1, true);
+    });
+  </script>
+</body>
+</html>

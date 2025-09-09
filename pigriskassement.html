@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pig Farm Biosecurity & Disease Risk Assessment</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .pulse-animation { animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-red-50 to-orange-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Header -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8 text-center">
+            <div class="flex items-center justify-center space-x-4 mb-4">
+                <div class="bg-red-100 p-3 rounded-full">
+                    <span class="text-3xl">🛡️</span>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800" id="mainTitle">Pig Farm Biosecurity & Disease Risk Assessment</h1>
+                    <p class="text-gray-600" id="subtitle">AI-Powered Analysis with Voice Support</p>
+                </div>
+            </div>
+            
+            <!-- Language Toggle -->
+            <div class="flex justify-center space-x-4 mb-4">
+                <button id="englishBtn" class="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium transition-colors">English</button>
+                <button id="hindiBtn" class="px-6 py-2 bg-gray-200 text-gray-700 hover:bg-gray-300 rounded-lg font-medium transition-colors">हिंदी</button>
+            </div>
+
+            <!-- Voice Controls -->
+            <div class="flex justify-center space-x-4">
+                <button id="speakBtn" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center space-x-2">
+                    <span>🔊</span>
+                    <span id="speakBtnText">Read Aloud</span>
+                </button>
+                <button id="stopSpeakBtn" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors flex items-center space-x-2 hidden">
+                    <span>🔇</span>
+                    <span id="stopSpeakBtnText">Stop</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Assessment Form -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <!-- Progress Bar -->
+            <div class="mb-6">
+                <div class="flex justify-between items-center mb-2">
+                    <h2 class="text-2xl font-bold text-gray-800" id="assessmentTitle">Biosecurity & Disease Risk Assessment</h2>
+                    <span id="progressText" class="text-sm text-gray-600">Question 1 of 12</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div id="progressBar" class="bg-red-600 h-2 rounded-full transition-all duration-300" style="width: 8.33%"></div>
+                </div>
+            </div>
+            
+            <form id="riskAssessmentForm" class="space-y-6">
+                <!-- Single Question Container -->
+                <div id="currentQuestionContainer" class="fade-in bg-gradient-to-r from-red-50 to-orange-50 p-6 rounded-lg min-h-[350px] border border-red-100">
+                    <!-- Current question will be populated here -->
+                </div>
+
+                <!-- Navigation Buttons -->
+                <div class="flex justify-between pt-6">
+                    <button type="button" id="prevBtn" class="px-6 py-3 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-lg font-medium transition-colors hidden">
+                        ← <span id="prevBtnText">Previous</span>
+                    </button>
+                    <div class="flex space-x-4">
+                        <button type="button" id="nextBtn" class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors">
+                            <span id="nextBtnText">Next</span> →
+                        </button>
+                        <button type="submit" id="analyzeBtn" class="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors items-center space-x-2 hidden">
+                            <span>🤖</span>
+                            <span id="analyzeBtnText">Analyze Biosecurity Risk</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Loading Animation -->
+        <div id="loadingDiv" class="bg-white rounded-xl shadow-lg p-8 text-center hidden">
+            <div class="pulse-animation">
+                <span class="text-4xl">🤖</span>
+            </div>
+            <p class="text-lg font-medium text-gray-700 mt-4" id="loadingText">AI is analyzing your biosecurity practices...</p>
+        </div>
+
+        <!-- Results -->
+        <div id="resultsDiv" class="bg-white rounded-xl shadow-lg p-6 hidden">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-gray-800" id="resultsTitle">Biosecurity Risk Assessment Results</h2>
+                <button id="speakResultsBtn" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center space-x-2">
+                    <span>🔊</span>
+                    <span id="speakResultsBtnText">Read Results</span>
+                </button>
+            </div>
+            
+            <!-- Risk Level Indicator -->
+            <div id="riskIndicator" class="mb-6 p-4 rounded-lg"></div>
+            
+            <!-- AI Analysis -->
+            <div id="aiAnalysis" class="prose max-w-none"></div>
+        </div>
+    </div>
+
+    <script>
+        const GEMINI_API_KEY = "AIzaSyClic_G3hl5cgL8uCXq0zD8pE3tpAKw4mM";
+        const GEMINI_API_URL_TEXT_IMAGE = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=" + GEMINI_API_KEY;
+        const GEMINI_API_URL_TEXT = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" + GEMINI_API_KEY;
+
+        let currentLanguage = 'english';
+        let speechSynthesis = window.speechSynthesis;
+        let currentUtterance = null;
+
+        let currentQuestionIndex = 0;
+        let userAnswers = {};
+
+        const translations = {
+            english: {
+                mainTitle: "Pig Farm Biosecurity & Disease Risk Assessment",
+                subtitle: "AI-Powered Analysis with Voice Support",
+                assessmentTitle: "Biosecurity & Disease Risk Assessment",
+                speakBtnText: "Read Aloud",
+                stopSpeakBtnText: "Stop",
+                analyzeBtnText: "Analyze Biosecurity Risk",
+                loadingText: "AI is analyzing your biosecurity practices...",
+                resultsTitle: "Biosecurity Risk Assessment Results",
+                speakResultsBtnText: "Read Results",
+                nextBtnText: "Next",
+                prevBtnText: "Previous",
+                progressText: "Question",
+                of: "of",
+                questions: [
+                    {
+                        id: 'farmAccess',
+                        question: 'How do you control access to your pig farm?',
+                        options: [
+                            'No access control - anyone can enter',
+                            'Basic fencing but no visitor restrictions',
+                            'Controlled entry with visitor log and basic restrictions',
+                            'Strict access control with disinfection protocols and authorized personnel only'
+                        ]
+                    },
+                    {
+                        id: 'quarantine',
+                        question: 'What quarantine procedures do you follow for new pigs?',
+                        options: [
+                            'No quarantine - new pigs go directly with existing herd',
+                            'Basic separation for 1-3 days',
+                            'Quarantine for 1-2 weeks with basic health observation',
+                            'Strict 21-30 day quarantine with veterinary examination and testing'
+                        ]
+                    },
+                    {
+                        id: 'feedSafety',
+                        question: 'How do you ensure feed and water safety?',
+                        options: [
+                            'Use any available feed and water sources',
+                            'Basic quality check of feed, regular water source',
+                            'Purchase certified feed, test water quality periodically',
+                            'Strict feed quality protocols, regular water testing, and contamination prevention measures'
+                        ]
+                    },
+                    {
+                        id: 'wasteManagement',
+                        question: 'How do you manage pig waste and dead animals?',
+                        options: [
+                            'No specific disposal system',
+                            'Basic disposal without proper treatment',
+                            'Proper composting/burial with some safety measures',
+                            'Comprehensive waste management with biosecure disposal and treatment protocols'
+                        ]
+                    },
+                    {
+                        id: 'vaccination',
+                        question: 'What is your vaccination and health monitoring program?',
+                        options: [
+                            'No regular vaccination or health monitoring',
+                            'Occasional vaccinations when problems arise',
+                            'Basic vaccination schedule with periodic health checks',
+                            'Comprehensive vaccination program with regular veterinary monitoring and health records'
+                        ]
+                    },
+                    {
+                        id: 'equipmentSanitation',
+                        question: 'How do you sanitize equipment and facilities?',
+                        options: [
+                            'No regular cleaning or sanitization',
+                            'Basic cleaning when visibly dirty',
+                            'Regular cleaning with soap and water',
+                            'Strict sanitization protocols with approved disinfectants and scheduled cleaning'
+                        ]
+                    },
+                    {
+                        id: 'diseaseOutbreak',
+                        question: 'Do you have a disease outbreak response plan?',
+                        options: [
+                            'No specific plan for disease outbreaks',
+                            'Basic response - isolate sick animals',
+                            'Written plan with isolation and veterinary contact procedures',
+                            'Comprehensive outbreak response plan with immediate isolation, testing, and reporting protocols'
+                        ]
+                    },
+                    {
+                        id: 'staffHygiene',
+                        question: 'What hygiene practices do your staff follow?',
+                        options: [
+                            'No specific hygiene requirements',
+                            'Basic handwashing when convenient',
+                            'Regular handwashing and clean clothing requirements',
+                            'Strict hygiene protocols including handwashing, protective clothing, and disinfection procedures'
+                        ]
+                    },
+                    {
+                        id: 'animalMovement',
+                        question: 'How do you manage animal movement on and off the farm?',
+                        options: [
+                            'No restrictions on animal movement',
+                            'Basic record keeping of animal sales/purchases',
+                            'Movement records with some health documentation',
+                            'Strict movement controls with health certificates, testing, and detailed documentation'
+                        ]
+                    },
+                    {
+                        id: 'vehicleDisinfection',
+                        question: 'How do you handle vehicle and equipment disinfection?',
+                        options: [
+                            'No vehicle or equipment disinfection',
+                            'Occasional cleaning of vehicles',
+                            'Regular washing of vehicles and equipment',
+                            'Mandatory disinfection of all vehicles and equipment entering/leaving the farm'
+                        ]
+                    },
+                    {
+                        id: 'diseaseMonitoring',
+                        question: 'How do you monitor for signs of disease in your pigs?',
+                        options: [
+                            'No regular disease monitoring',
+                            'Check animals only when they appear obviously sick',
+                            'Daily observation for basic signs of illness',
+                            'Systematic daily health monitoring with temperature checks and detailed health records'
+                        ]
+                    },
+                    {
+                        id: 'biosecurityTraining',
+                        question: 'What biosecurity training do you and your staff receive?',
+                        options: [
+                            'No formal biosecurity training',
+                            'Basic informal guidance on farm practices',
+                            'Some training on disease prevention and hygiene',
+                            'Regular comprehensive biosecurity training with updates on best practices and disease threats'
+                        ]
+                    }
+                ]
+            },
+            hindi: {
+                mainTitle: "सुअर फार्म जैव सुरक्षा और रोग जोखिम मूल्यांकन",
+                subtitle: "AI-संचालित विश्लेषण और आवाज़ सहायता के साथ",
+                assessmentTitle: "जैव सुरक्षा और रोग जोखिम मूल्यांकन",
+                speakBtnText: "जोर से पढ़ें",
+                stopSpeakBtnText: "रोकें",
+                analyzeBtnText: "जैव सुरक्षा जोखिम का विश्लेषण करें",
+                loadingText: "AI आपकी जैव सुरक्षा प्रथाओं का विश्लेषण कर रहा है...",
+                resultsTitle: "जैव सुरक्षा जोखिम मूल्यांकन परिणाम",
+                speakResultsBtnText: "परिणाम पढ़ें",
+                nextBtnText: "अगला",
+                prevBtnText: "पिछला",
+                progressText: "प्रश्न",
+                of: "का",
+                questions: [
+                    {
+                        id: 'farmAccess',
+                        question: 'आप अपने सुअर फार्म में प्रवेश को कैसे नियंत्रित करते हैं?',
+                        options: [
+                            'कोई प्रवेश नियंत्रण नहीं - कोई भी प्रवेश कर सकता है',
+                            'बुनियादी बाड़ लेकिन आगंतुक प्रतिबंध नहीं',
+                            'आगंतुक लॉग और बुनियादी प्रतिबंधों के साथ नियंत्रित प्रवेश',
+                            'कीटाणुशोधन प्रोटोकॉल और केवल अधिकृत कर्मियों के साथ सख्त प्रवेश नियंत्रण'
+                        ]
+                    },
+                    {
+                        id: 'quarantine',
+                        question: 'नए सुअरों के लिए आप कौन सी संगरोध प्रक्रियाओं का पालन करते हैं?',
+                        options: [
+                            'कोई संगरोध नहीं - नए सुअर सीधे मौजूदा झुंड के साथ जाते हैं',
+                            '1-3 दिनों के लिए बुनियादी अलगाव',
+                            'बुनियादी स्वास्थ्य अवलोकन के साथ 1-2 सप्ताह का संगरोध',
+                            'पशु चिकित्सा परीक्षा और परीक्षण के साथ सख्त 21-30 दिन का संगरोध'
+                        ]
+                    },
+                    {
+                        id: 'feedSafety',
+                        question: 'आप चारे और पानी की सुरक्षा कैसे सुनिश्चित करते हैं?',
+                        options: [
+                            'कोई भी उपलब्ध चारा और पानी के स्रोत का उपयोग करते हैं',
+                            'चारे की बुनियादी गुणवत्ता जांच, नियमित पानी का स्रोत',
+                            'प्रमाणित चारा खरीदते हैं, समय-समय पर पानी की गुणवत्ता का परीक्षण करते हैं',
+                            'सख्त चारा गुणवत्ता प्रोटोकॉल, नियमित पानी परीक्षण, और संदूषण रोकथाम उपाय'
+                        ]
+                    },
+                    {
+                        id: 'wasteManagement',
+                        question: 'आप सुअर के कचरे और मृत जानवरों का प्रबंधन कैसे करते हैं?',
+                        options: [
+                            'कोई विशिष्ट निपटान प्रणाली नहीं',
+                            'उचित उपचार के बिना बुनियादी निपटान',
+                            'कुछ सुरक्षा उपायों के साथ उचित कंपोस्टिंग/दफन',
+                            'जैव सुरक्षित निपटान और उपचार प्रोटोकॉल के साथ व्यापक अपशिष्ट प्रबंधन'
+                        ]
+                    },
+                    {
+                        id: 'vaccination',
+                        question: 'आपका टीकाकरण और स्वास्थ्य निगरानी कार्यक्रम क्या है?',
+                        options: [
+                            'कोई नियमित टीकाकरण या स्वास्थ्य निगरानी नहीं',
+                            'समस्याएं उत्पन्न होने पर कभी-कभार टीकाकरण',
+                            'समय-समय पर स्वास्थ्य जांच के साथ बुनियादी टीकाकरण अनुसूची',
+                            'नियमित पशु चिकित्सा निगरानी और स्वास्थ्य रिकॉर्ड के साथ व्यापक टीकाकरण कार्यक्रम'
+                        ]
+                    },
+                    {
+                        id: 'equipmentSanitation',
+                        question: 'आप उपकरण और सुविधाओं को कैसे साफ करते हैं?',
+                        options: [
+                            'कोई नियमित सफाई या कीटाणुशोधन नहीं',
+                            'दिखाई देने पर गंदे होने पर बुनियादी सफाई',
+                            'साबुन और पानी से नियमित सफाई',
+                            'अनुमोदित कीटाणुनाशकों और निर्धारित सफाई के साथ सख्त कीटाणुशोधन प्रोटोकॉल'
+                        ]
+                    },
+                    {
+                        id: 'diseaseOutbreak',
+                        question: 'क्या आपके पास रोग प्रकोप प्रतिक्रिया योजना है?',
+                        options: [
+                            'रोग प्रकोप के लिए कोई विशिष्ट योजना नहीं',
+                            'बुनियादी प्रतिक्रिया - बीमार जानवरों को अलग करना',
+                            'अलगाव और पशु चिकित्सा संपर्क प्रक्रियाओं के साथ लिखित योजना',
+                            'तत्काल अलगाव, परीक्षण और रिपोर्टिंग प्रोटोकॉल के साथ व्यापक प्रकोप प्रतिक्रिया योजना'
+                        ]
+                    },
+                    {
+                        id: 'staffHygiene',
+                        question: 'आपके कर्मचारी कौन सी स्वच्छता प्रथाओं का पालन करते हैं?',
+                        options: [
+                            'कोई विशिष्ट स्वच्छता आवश्यकताएं नहीं',
+                            'सुविधाजनक होने पर बुनियादी हाथ धोना',
+                            'नियमित हाथ धोना और साफ कपड़ों की आवश्यकताएं',
+                            'हाथ धोना, सुरक्षात्मक कपड़े और कीटाणुशोधन प्रक्रियाओं सहित सख्त स्वच्छता प्रोटोकॉल'
+                        ]
+                    },
+                    {
+                        id: 'animalMovement',
+                        question: 'आप फार्म में और बाहर जानवरों की आवाजाही का प्रबंधन कैसे करते हैं?',
+                        options: [
+                            'जानवरों की आवाजाही पर कोई प्रतिबंध नहीं',
+                            'जानवरों की बिक्री/खरीद का बुनियादी रिकॉर्ड रखना',
+                            'कुछ स्वास्थ्य दस्तावेजों के साथ आवाजाही रिकॉर्ड',
+                            'स्वास्थ्य प्रमाणपत्र, परीक्षण और विस्तृत दस्तावेजीकरण के साथ सख्त आवाजाही नियंत्रण'
+                        ]
+                    },
+                    {
+                        id: 'vehicleDisinfection',
+                        question: 'आप वाहन और उपकरण कीटाणुशोधन को कैसे संभालते हैं?',
+                        options: [
+                            'कोई वाहन या उपकरण कीटाणुशोधन नहीं',
+                            'वाहनों की कभी-कभार सफाई',
+                            'वाहनों और उपकरणों की नियमित धुलाई',
+                            'फार्म में प्रवेश/निकास करने वाले सभी वाहनों और उपकरणों का अनिवार्य कीटाणुशोधन'
+                        ]
+                    },
+                    {
+                        id: 'diseaseMonitoring',
+                        question: 'आप अपने सुअरों में बीमारी के संकेतों की निगरानी कैसे करते हैं?',
+                        options: [
+                            'कोई नियमित रोग निगरानी नहीं',
+                            'केवल तभी जानवरों की जांच करना जब वे स्पष्ट रूप से बीमार दिखें',
+                            'बीमारी के बुनियादी संकेतों के लिए दैनिक अवलोकन',
+                            'तापमान जांच और विस्तृत स्वास्थ्य रिकॉर्ड के साथ व्यवस्थित दैनिक स्वास्थ्य निगरानी'
+                        ]
+                    },
+                    {
+                        id: 'biosecurityTraining',
+                        question: 'आप और आपके कर्मचारियों को कौन सा जैव सुरक्षा प्रशिक्षण मिलता है?',
+                        options: [
+                            'कोई औपचारिक जैव सुरक्षा प्रशिक्षण नहीं',
+                            'फार्म प्रथाओं पर बुनियादी अनौपचारिक मार्गदर्शन',
+                            'रोग रोकथाम और स्वच्छता पर कुछ प्रशिक्षण',
+                            'सर्वोत्तम प्रथाओं और रोग खतरों पर अपडेट के साथ नियमित व्यापक जैव सुरक्षा प्रशिक्षण'
+                        ]
+                    }
+                ]
+            }
+        };
+
+        function switchLanguage(lang) {
+            currentLanguage = lang;
+            
+            // Update button states
+            document.getElementById('englishBtn').className = lang === 'english' 
+                ? 'px-6 py-2 bg-blue-600 text-white rounded-lg font-medium transition-colors'
+                : 'px-6 py-2 bg-gray-200 text-gray-700 hover:bg-gray-300 rounded-lg font-medium transition-colors';
+            
+            document.getElementById('hindiBtn').className = lang === 'hindi' 
+                ? 'px-6 py-2 bg-blue-600 text-white rounded-lg font-medium transition-colors'
+                : 'px-6 py-2 bg-gray-200 text-gray-700 hover:bg-gray-300 rounded-lg font-medium transition-colors';
+
+            updateContent();
+            renderCurrentQuestion();
+        }
+
+        function updateContent() {
+            const content = translations[currentLanguage];
+            
+            document.getElementById('mainTitle').textContent = content.mainTitle;
+            document.getElementById('subtitle').textContent = content.subtitle;
+            document.getElementById('assessmentTitle').textContent = content.assessmentTitle;
+            document.getElementById('speakBtnText').textContent = content.speakBtnText;
+            document.getElementById('stopSpeakBtnText').textContent = content.stopSpeakBtnText;
+            document.getElementById('analyzeBtnText').textContent = content.analyzeBtnText;
+            document.getElementById('loadingText').textContent = content.loadingText;
+            document.getElementById('resultsTitle').textContent = content.resultsTitle;
+            document.getElementById('speakResultsBtnText').textContent = content.speakResultsBtnText;
+            document.getElementById('nextBtnText').textContent = content.nextBtnText;
+            document.getElementById('prevBtnText').textContent = content.prevBtnText;
+            
+            updateProgressText();
+        }
+
+        function updateProgressText() {
+            const content = translations[currentLanguage];
+            const totalQuestions = translations[currentLanguage].questions.length;
+            document.getElementById('progressText').textContent = 
+                `${content.progressText} ${currentQuestionIndex + 1} ${content.of} ${totalQuestions}`;
+        }
+
+        function renderCurrentQuestion() {
+            const container = document.getElementById('currentQuestionContainer');
+            const questions = translations[currentLanguage].questions;
+            const currentQuestion = questions[currentQuestionIndex];
+            
+            if (!currentQuestion) return;
+
+            container.innerHTML = `
+                <div class="flex justify-between items-start mb-6">
+                    <h3 class="text-xl font-semibold text-gray-800 flex-1 pr-4 leading-relaxed">
+                        ${currentQuestionIndex + 1}. ${currentQuestion.question}
+                    </h3>
+                    <button type="button" id="speakQuestionBtn" class="flex-shrink-0 px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg font-medium transition-colors flex items-center space-x-2">
+                        <span>🔊</span>
+                        <span class="hidden sm:inline">${translations[currentLanguage].speakBtnText}</span>
+                    </button>
+                </div>
+                <div class="space-y-4">
+                    ${currentQuestion.options.map((option, optIndex) => `
+                        <label class="flex items-start space-x-3 cursor-pointer hover:bg-white p-4 rounded-lg border border-transparent hover:border-red-200 transition-all group">
+                            <input type="radio" name="${currentQuestion.id}" value="${optIndex}" 
+                                   class="text-red-600 focus:ring-red-500 w-4 h-4 mt-1 flex-shrink-0"
+                                   ${userAnswers[currentQuestion.id] == optIndex ? 'checked' : ''}>
+                            <span class="text-gray-700 flex-1 leading-relaxed group-hover:text-gray-900">${option}</span>
+                        </label>
+                    `).join('')}
+                </div>
+            `;
+
+            // Add event listener for the speak button
+            document.getElementById('speakQuestionBtn').addEventListener('click', () => {
+                const questionText = currentQuestion.question + ' ' + currentQuestion.options.join(', ');
+                speakText(questionText);
+            });
+
+            // Add event listeners for radio buttons
+            const radioButtons = container.querySelectorAll('input[type="radio"]');
+            radioButtons.forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    userAnswers[currentQuestion.id] = parseInt(e.target.value);
+                    updateNavigationButtons();
+                });
+            });
+
+            updateProgressBar();
+            updateNavigationButtons();
+        }
+
+        function updateProgressBar() {
+            const totalQuestions = translations[currentLanguage].questions.length;
+            const progress = ((currentQuestionIndex + 1) / totalQuestions) * 100;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+            updateProgressText();
+        }
+
+        function updateNavigationButtons() {
+            const totalQuestions = translations[currentLanguage].questions.length;
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const analyzeBtn = document.getElementById('analyzeBtn');
+
+            // Show/hide previous button
+            if (currentQuestionIndex > 0) {
+                prevBtn.classList.remove('hidden');
+            } else {
+                prevBtn.classList.add('hidden');
+            }
+
+            // Show/hide next/analyze button
+            if (currentQuestionIndex < totalQuestions - 1) {
+                nextBtn.classList.remove('hidden');
+                analyzeBtn.classList.add('hidden');
+            } else {
+                nextBtn.classList.add('hidden');
+                analyzeBtn.classList.remove('hidden');
+                analyzeBtn.classList.add('flex');
+            }
+        }
+
+        function nextQuestion() {
+            const totalQuestions = translations[currentLanguage].questions.length;
+            if (currentQuestionIndex < totalQuestions - 1) {
+                currentQuestionIndex++;
+                renderCurrentQuestion();
+            }
+        }
+
+        function prevQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                renderCurrentQuestion();
+            }
+        }
+
+        function speakText(text, lang = 'en-US') {
+            if (currentUtterance) {
+                speechSynthesis.cancel();
+            }
+
+            currentUtterance = new SpeechSynthesisUtterance(text);
+            currentUtterance.lang = currentLanguage === 'hindi' ? 'hi-IN' : 'en-US';
+            currentUtterance.rate = 0.8;
+            currentUtterance.pitch = 1;
+
+            currentUtterance.onstart = () => {
+                document.getElementById('speakBtn').classList.add('hidden');
+                document.getElementById('stopSpeakBtn').classList.remove('hidden');
+            };
+
+            currentUtterance.onend = () => {
+                document.getElementById('speakBtn').classList.remove('hidden');
+                document.getElementById('stopSpeakBtn').classList.add('hidden');
+            };
+
+            speechSynthesis.speak(currentUtterance);
+        }
+
+        function stopSpeaking() {
+            speechSynthesis.cancel();
+            document.getElementById('speakBtn').classList.remove('hidden');
+            document.getElementById('stopSpeakBtn').classList.add('hidden');
+        }
+
+        function getFormData() {
+            const responses = {};
+            const questions = translations[currentLanguage].questions;
+            
+            questions.forEach(q => {
+                if (userAnswers[q.id] !== undefined) {
+                    responses[q.id] = {
+                        question: q.question,
+                        answer: q.options[userAnswers[q.id]],
+                        score: userAnswers[q.id]
+                    };
+                }
+            });
+            
+            return responses;
+        }
+
+        function calculateRiskScore(responses) {
+            let totalScore = 0;
+            let maxScore = 0;
+            
+            Object.values(responses).forEach(response => {
+                totalScore += response.score;
+                maxScore += 3; // Maximum score per question (0-3 scale)
+            });
+            
+            return (totalScore / maxScore) * 100;
+        }
+
+        function getRiskLevel(score) {
+            if (score >= 75) return { level: 'Low Biosecurity Risk', color: 'green', emoji: '✅' };
+            if (score >= 50) return { level: 'Medium Biosecurity Risk', color: 'yellow', emoji: '⚠️' };
+            if (score >= 25) return { level: 'High Biosecurity Risk', color: 'orange', emoji: '🔶' };
+            return { level: 'Very High Biosecurity Risk', color: 'red', emoji: '🚨' };
+        }
+
+        async function analyzeWithGemini(responses, riskScore, riskLevel) {
+            const prompt = `
+                Analyze this pig farm biosecurity and disease risk assessment in ${currentLanguage === 'hindi' ? 'Hindi' : 'English'}:
+                
+                Risk Score: ${riskScore.toFixed(1)}%
+                Risk Level: ${riskLevel.level}
+                
+                Responses:
+                ${Object.entries(responses).map(([key, value]) => 
+                    `${value.question}: ${value.answer}`
+                ).join('\n')}
+                
+                Please provide a comprehensive analysis focusing on:
+                1. Critical biosecurity gaps and vulnerabilities
+                2. Disease prevention weaknesses
+                3. Immediate priority actions to reduce risk
+                4. Long-term biosecurity improvement strategies
+                5. Specific protocols for disease outbreak prevention
+                6. Staff training recommendations
+                7. Infrastructure improvements needed
+                
+                ${currentLanguage === 'hindi' ? 'कृपया हिंदी में उत्तर दें।' : 'Please respond in English.'}
+                
+                Format the response in HTML with proper headings, bullet points, and actionable recommendations.
+            `;
+
+            try {
+                const response = await fetch(GEMINI_API_URL_TEXT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: prompt
+                            }]
+                        }]
+                    })
+                });
+
+                const data = await response.json();
+                return data.candidates[0].content.parts[0].text;
+            } catch (error) {
+                console.error('Error calling Gemini API:', error);
+                return currentLanguage === 'hindi' 
+                    ? 'विश्लेषण में त्रुटि हुई। कृपया बाद में पुनः प्रयास करें।'
+                    : 'Error in analysis. Please try again later.';
+            }
+        }
+
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            
+            const responses = getFormData();
+            
+            if (Object.keys(responses).length < translations[currentLanguage].questions.length) {
+                alert(currentLanguage === 'hindi' 
+                    ? 'कृपया सभी प्रश्नों के उत्तर दें।'
+                    : 'Please answer all questions.');
+                return;
+            }
+
+            // Show loading
+            document.getElementById('loadingDiv').classList.remove('hidden');
+            document.getElementById('resultsDiv').classList.add('hidden');
+
+            // Calculate risk score
+            const riskScore = calculateRiskScore(responses);
+            const riskLevel = getRiskLevel(riskScore);
+
+            // Get AI analysis
+            const aiAnalysis = await analyzeWithGemini(responses, riskScore, riskLevel);
+
+            // Hide loading and show results
+            document.getElementById('loadingDiv').classList.add('hidden');
+            document.getElementById('resultsDiv').classList.remove('hidden');
+
+            // Display results
+            const riskIndicator = document.getElementById('riskIndicator');
+            riskIndicator.className = `mb-6 p-4 rounded-lg bg-${riskLevel.color}-100 border border-${riskLevel.color}-300`;
+            riskIndicator.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <span class="text-2xl">${riskLevel.emoji}</span>
+                        <div>
+                            <h3 class="text-lg font-bold text-${riskLevel.color}-800">${riskLevel.level}</h3>
+                            <p class="text-${riskLevel.color}-700">Biosecurity Score: ${riskScore.toFixed(1)}%</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('aiAnalysis').innerHTML = aiAnalysis;
+
+            // Scroll to results
+            document.getElementById('resultsDiv').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function speakResults() {
+            const riskIndicator = document.getElementById('riskIndicator').textContent;
+            const aiAnalysis = document.getElementById('aiAnalysis').textContent;
+            const fullText = riskIndicator + ' ' + aiAnalysis;
+            speakText(fullText);
+        }
+
+        function speakCurrentContent() {
+            const title = document.getElementById('mainTitle').textContent;
+            const subtitle = document.getElementById('subtitle').textContent;
+            const fullText = title + ' ' + subtitle;
+            speakText(fullText);
+        }
+
+        // Event listeners
+        document.getElementById('englishBtn').addEventListener('click', () => switchLanguage('english'));
+        document.getElementById('hindiBtn').addEventListener('click', () => switchLanguage('hindi'));
+        document.getElementById('speakBtn').addEventListener('click', speakCurrentContent);
+        document.getElementById('stopSpeakBtn').addEventListener('click', stopSpeaking);
+        document.getElementById('speakResultsBtn').addEventListener('click', speakResults);
+        document.getElementById('riskAssessmentForm').addEventListener('submit', handleFormSubmit);
+        document.getElementById('nextBtn').addEventListener('click', nextQuestion);
+        document.getElementById('prevBtn').addEventListener('click', prevQuestion);
+
+        // Initialize
+        switchLanguage('english');
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97c77f78228746ec',t:'MTc1NzQyOTQyNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
