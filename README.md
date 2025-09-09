@@ -150,8 +150,8 @@ npm start
 
 ## 👨‍💻 Contributors
 
-* **Apoorva Singh** – Full-Stack Development, AI/ML Integration
-* **Team Zeyotech Titans (SIH 2025)** – Research, UI/UX, Deployment
+* **Apoorva Singh** – Full-Stack Developer
+
 
 ---
 
