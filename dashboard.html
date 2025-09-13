@@ -151,15 +151,14 @@
             border: none;
         }
         .result-card {
-            border: 1px solid #e5e7eb;       /* gray-200 */
-            border-radius: 0.75rem;          /* rounded-xl */
-            padding: 1rem;                   /* p-4 */
-            background: #ffffff;             /* white */
+            border: 1px solid #e5e7eb;       
+            border-radius: 0.75rem;         
+            padding: 1rem;                   
+            background: #ffffff;            
             box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1),
-                        0 4px 6px -2px rgba(0,0,0,0.05); /* shadow-lg */
+                        0 4px 6px -2px rgba(0,0,0,0.05); 
         }
         
-        /* Training progress */
         .progress-container {
             width: 100%;
             height: 20px;
@@ -193,7 +192,6 @@
             opacity: 1;
         }
         
-        /* Additional blocks styling */
         .additional-block {
             display: none;
         }
@@ -228,7 +226,7 @@
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen font-sans">
-    <!-- AI Chatbot -->
+  
     <div id="ai-chatbot-container" class="bg-white">
         <iframe
             id="ai-chatbot-frame"
@@ -249,7 +247,6 @@
 </div>
 
 
-    <!-- Mobile menu button -->
     <div class="lg:hidden fixed top-4 left-4 z-50">
         <button id="mobileMenuBtn" class="p-2 rounded-md bg-green-600 text-white">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1511,7 +1508,6 @@
             newsContainer.innerHTML = newsHTML;
         }
 
-        // Helper function to format date
         function formatDate(dateString) {
             const date = new Date(dateString);
             return date.toLocaleDateString('en-US', { 
@@ -1524,9 +1520,9 @@
     document.getElementById('videoSection').scrollIntoView({ behavior: 'smooth' });
     increaseProgress();
 }
- // Text-to-speech functionality
+
         function speakContent(type) {
-            // Stop any previous speech
+           
             window.speechSynthesis.cancel();
             
             let textToSpeak = '';
