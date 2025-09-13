@@ -24,9 +24,9 @@ FarmShield empowers farmers with **AI-powered disease detection, IoT-based monit
 * Track livestock records, manual risk assessments, and digital health logs.
 * **Heatmaps** for disease spread and farm monitoring.
 
-### 🌐 IoT Integration & Environmental Monitoring
+### 🌐 Environmental Monitoring
 
-* Collects temperature, humidity, and environment data via IoT sensors.
+* Collects temperature, humidity, and environment data.
 * Predicts **climate risk** with WeatherAPI.
 * **Offline-first support** with caching + SMS alerts for poor internet zones.
 
@@ -42,13 +42,6 @@ FarmShield empowers farmers with **AI-powered disease detection, IoT-based monit
 * Chatbot assistance for non-technical farmers.
 * Simple mobile-friendly design.
 
-### ☁ Deployment & Scalability
-
-* **Dockerized microservices** for modular deployment.
-* Cloud-ready with **load balancing & autoscaling**.
-* Secure authentication for farmers & government authorities.
-
----
 
 ## 🛠 Tech Stack
 
@@ -57,25 +50,16 @@ FarmShield empowers farmers with **AI-powered disease detection, IoT-based monit
 * **HTML, CSS, JavaScript** (extendable to React/Next.js)
 * Responsive UI with **farmer-focused design**
 
-### Backend
-
-* **Node.js + Express** for REST APIs
-* Authentication & authorization modules
 
 ### Database
 
-* **MongoDB / MongoDB Atlas** for livestock, farm, and risk records
+* **Firebase for livestock, farm, and risk records
 
 ### AI/ML
 
 * **TensorFlow / Scikit-learn** models for poultry disease detection
 * Climate risk prediction using datasets & weather APIs
 
-### DevOps & Cloud
-
-* **Dockerized deployment**
-* **Cloud hosting** (AWS/GCP/Azure compatible)
-* **Load balancing** for high scalability
 
 ### APIs & Tools
 
