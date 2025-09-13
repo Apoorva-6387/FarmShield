@@ -34,7 +34,6 @@
     const userInput = document.getElementById("userInput");
     const sendBtn = document.getElementById("sendBtn");
 
-    // Add message to chat window
     function addMessage(sender, text) {
       const msg = document.createElement("div");
       msg.classList.add("message");
@@ -42,8 +41,6 @@
       messagesDiv.appendChild(msg);
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
-
-    // Call Gemini API
     async function getGeminiResponse(prompt) {
       const body = {
         contents: [{
@@ -67,7 +64,6 @@
       }
     }
 
-    // Handle user input
     sendBtn.addEventListener("click", async () => {
       const text = userInput.value.trim();
       if (!text) return;
@@ -79,7 +75,6 @@
       addMessage("bot", botReply);
     });
 
-    // Press Enter to send
     userInput.addEventListener("keypress", (e) => {
       if (e.key === "Enter") sendBtn.click();
     });
